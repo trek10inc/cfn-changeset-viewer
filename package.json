@@ -1,0 +1,33 @@
+{
+  "name": "cfn-changeset-viewer",
+  "version": "0.0.3",
+  "description": "View the details of a CloudFormation ChangeSet (including nested ones!) in a human-friendly way",
+  "main": "index.js",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/trek10inc/cfn-changeset-viewer.git"
+  },
+  "keywords": [
+    "cfn",
+    "cloudformation",
+    "change",
+    "set",
+    "viewer",
+    "nested",
+    "stack"
+  ],
+  "author": "Trek10, Inc",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/trek10inc/cfn-changeset-viewer/issues"
+  },
+  "homepage": "https://github.com/trek10inc/cfn-changeset-viewer#readme",
+  "dependencies": {
+    "aws-sdk": "^2.1250.0",
+    "chalk": "^4.1.2",
+    "yargs": "^17.6.2"
+  },
+  "bin": {
+    "cfn-changeset-viewer": "index.js"
+  }
+}
