@@ -2,7 +2,9 @@
 const AWS = require('aws-sdk');
 const chalk = require('chalk');
 const yargs = require('yargs');
-const { hideBin } = require('yargs/helpers');
+const {hideBin} = require('yargs/helpers');
+const yaml = require('js-yaml')
+const fs = require('fs')
 
 const CloudFormation = new AWS.CloudFormation();
 
@@ -50,7 +52,7 @@ function chunkString(str, length) {
  * @param {string} color
  * @param {string} style
  */
- function logLine(row, color, style) {
+function logLine(row, color, style) {
   const numberOfTerminalColumns = Math.floor(process.stdout.columns * 0.8) || 132;
   const columnWidths = [
     3,
@@ -82,15 +84,16 @@ function chunkString(str, length) {
     if (color) {
       if (style) console.log(chalk[color][style](message))
       else console.log(chalk[color](message))
-    }
-    else console.log(message);
+    } else console.log(message);
   }
 }
 
 /**
- * @param {import('aws-sdk').CloudFormation.ResourceChange} resourceChange
+ * @param {CloudFormation.ResourceChange} resourceChange
+ * @param {CloudFormation.GetTemplateOutput & {$response: Response<CloudFormation.GetTemplateOutput, Error & {code: string; message: string; retryable?: boolean; statusCode?: number; time: Date; hostname?: string; region?: string; retryDelay?: number; requestId?: string; extendedRequestId?: string; cfId?: string; originalError?: Error}>}} oldTemplate
+ * @param {CloudFormation.GetTemplateOutput & {$response: Response<CloudFormation.GetTemplateOutput, Error & {code: string; message: string; retryable?: boolean; statusCode?: number; time: Date; hostname?: string; region?: string; retryDelay?: number; requestId?: string; extendedRequestId?: string; cfId?: string; originalError?: Error}>}} newTemplate
  */
- function logChange(resourceChange) {
+function logChange(resourceChange, oldTemplate, newTemplate) {
   const resourceReplacement = resourceReplacementIconMap[resourceChange.Replacement]
   logLine([
     actionIconMap[resourceChange.Action] || '',
@@ -100,7 +103,23 @@ function chunkString(str, length) {
     '',
     '',
   ], resourceLineColorMap[resourceChange.Action], resourceReplacement ? 'bold' : undefined)
+  const oldResource = (yaml.load(oldTemplate.TemplateBody) ?? (JSON.parse(oldTemplate.TemplateBody))).Resources?.[resourceChange.LogicalResourceId]
+  const newResource = (yaml.load(newTemplate.TemplateBody) ?? (JSON.parse(oldTemplate.TemplateBody))).Resources?.[resourceChange.LogicalResourceId]
+  if (!newResource) {
+    console.log(JSON.stringify({
+      resourceChange, oldTemplate, newTemplate, oldResource: oldResource ?? null, newResource: newResource ?? null,
+      parsed: JSON.parse(oldTemplate.TemplateBody)
+
+    }, null, 2))
+  }
+  // console.log(JSON.stringify({
+  //   oldResource, newResource
+  // }, null, 2))
   for (let changeDetail of resourceChange.Details) {
+    const oldPropertyValue = JSON.stringify(oldResource?.[changeDetail.Target.Attribute]?.[changeDetail.Target.Name]
+      ?? oldResource?.[changeDetail.Target.Attribute] ?? 'not found')
+    const newPropertyValue = JSON.stringify(newResource?.[changeDetail.Target.Attribute]?.[changeDetail.Target.Name]
+      ?? newResource?.[changeDetail.Target.Attribute] ?? 'not found')
     const changeSourceMap = {
       'ParameterReference': `!Ref ${changeDetail.CausingEntity}`,
       'ResourceReference': `!Ref ${changeDetail.CausingEntity}`,
@@ -111,8 +130,8 @@ function chunkString(str, length) {
     logLine([
       '',
       '',
-      '',
-      '',
+      oldPropertyValue,
+      newPropertyValue,
       `${changeDetail.Target.Attribute}${changeDetail.Target.Name ? '.' : ''}${changeDetail.Target.Name || ''}`,
       changeSourceMap[changeDetail.ChangeSource] || changeDetail.CausingEntity,
     ]);
@@ -123,7 +142,7 @@ function chunkString(str, length) {
  * @param {string} changeSetId
  * @param {string} path
  */
- async function printChangeSet(changeSetId, stackName, path) {
+async function printChangeSet(changeSetId, stackName, path) {
   const totals = {
     Add: 0,
     Modify: 0,
@@ -132,7 +151,25 @@ function chunkString(str, length) {
     Dynamic: 0,
   };
   if (!path) path = '';
-  const response = await CloudFormation.describeChangeSet({ ChangeSetName: changeSetId, StackName: stackName }).promise();
+  const response = await CloudFormation.describeChangeSet({ChangeSetName: changeSetId, StackName: stackName}).promise();
+  const [oldTemplate, newTemplate] = await Promise.all([
+      CloudFormation.getTemplate({
+          StackName: response['StackName'],
+          // TemplateStage: 'Processed'
+        },
+      ).promise(),
+      CloudFormation.getTemplate({
+          ChangeSetName: changeSetId,
+          // TemplateStage: 'Processed'
+        }
+      ).promise(),
+    ]
+  )
+  // console.log(JSON.stringify({
+  //   oldTemplate, newTemplate
+  // }))
+  // fs.writeFileSync(`old-${response["StackName"]}.json`, JSON.stringify(oldTemplate))
+  // fs.writeFileSync(`new-${response["StackName"]}.json`, JSON.stringify(newTemplate))
   for (let change of response.Changes) {
     const resourceChange = change.ResourceChange;
     totals[resourceChange.Action] += 1;
@@ -141,7 +178,7 @@ function chunkString(str, length) {
       ...change.ResourceChange,
       // handle rendering nested stack resources as MyNestedStack/MyResource
       LogicalResourceId: logicalId,
-    });
+    }, oldTemplate, newTemplate);
     if (resourceChange.ChangeSetId) {
       const nestedTotals = await printChangeSet(resourceChange.ChangeSetId, undefined, `${logicalId}/`);
       totals.Add += nestedTotals.Add;
