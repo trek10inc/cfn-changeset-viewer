@@ -4,7 +4,7 @@ const chalk = require('chalk');
 const yargs = require('yargs');
 const {hideBin} = require('yargs/helpers');
 const yaml = require('js-yaml')
-const fs = require('fs')
+const jsondiff = require('json-diff')
 
 const CloudFormation = new AWS.CloudFormation();
 
@@ -103,23 +103,14 @@ function logChange(resourceChange, oldTemplate, newTemplate) {
     '',
     '',
   ], resourceLineColorMap[resourceChange.Action], resourceReplacement ? 'bold' : undefined)
-  const oldResource = (yaml.load(oldTemplate.TemplateBody) ?? (JSON.parse(oldTemplate.TemplateBody))).Resources?.[resourceChange.LogicalResourceId]
-  const newResource = (yaml.load(newTemplate.TemplateBody) ?? (JSON.parse(oldTemplate.TemplateBody))).Resources?.[resourceChange.LogicalResourceId]
-  if (!newResource) {
-    console.log(JSON.stringify({
-      resourceChange, oldTemplate, newTemplate, oldResource: oldResource ?? null, newResource: newResource ?? null,
-      parsed: JSON.parse(oldTemplate.TemplateBody)
-
-    }, null, 2))
-  }
-  // console.log(JSON.stringify({
-  //   oldResource, newResource
-  // }, null, 2))
+  const actualResourceLogicalId = resourceChange.LogicalResourceId.split('/').at(-1)
+  const oldResource = yaml.load(oldTemplate.TemplateBody).Resources?.[actualResourceLogicalId]
+  const newResource = yaml.load(newTemplate.TemplateBody).Resources?.[actualResourceLogicalId]
   for (let changeDetail of resourceChange.Details) {
-    const oldPropertyValue = JSON.stringify(oldResource?.[changeDetail.Target.Attribute]?.[changeDetail.Target.Name]
-      ?? oldResource?.[changeDetail.Target.Attribute] ?? 'not found')
-    const newPropertyValue = JSON.stringify(newResource?.[changeDetail.Target.Attribute]?.[changeDetail.Target.Name]
-      ?? newResource?.[changeDetail.Target.Attribute] ?? 'not found')
+    const oldPropertyValue = oldResource?.[changeDetail.Target.Attribute]?.[changeDetail.Target.Name]
+      ?? oldResource?.[changeDetail.Target.Attribute] ?? 'not found'
+    const newPropertyValue = newResource?.[changeDetail.Target.Attribute]?.[changeDetail.Target.Name]
+      ?? newResource?.[changeDetail.Target.Attribute] ?? 'not found'
     const changeSourceMap = {
       'ParameterReference': `!Ref ${changeDetail.CausingEntity}`,
       'ResourceReference': `!Ref ${changeDetail.CausingEntity}`,
@@ -127,14 +118,16 @@ function logChange(resourceChange, oldTemplate, newTemplate) {
       'DirectModification': 'direct modification',
       'Automatic': 'automatic change',
     };
+    const diff = jsondiff.diffString(oldPropertyValue, newPropertyValue)
     logLine([
       '',
       '',
-      oldPropertyValue,
-      newPropertyValue,
+      '',
+      '',
       `${changeDetail.Target.Attribute}${changeDetail.Target.Name ? '.' : ''}${changeDetail.Target.Name || ''}`,
       changeSourceMap[changeDetail.ChangeSource] || changeDetail.CausingEntity,
     ]);
+    console.log(diff) // todo format this log better
   }
 }
 
@@ -165,11 +158,6 @@ async function printChangeSet(changeSetId, stackName, path) {
       ).promise(),
     ]
   )
-  // console.log(JSON.stringify({
-  //   oldTemplate, newTemplate
-  // }))
-  // fs.writeFileSync(`old-${response["StackName"]}.json`, JSON.stringify(oldTemplate))
-  // fs.writeFileSync(`new-${response["StackName"]}.json`, JSON.stringify(newTemplate))
   for (let change of response.Changes) {
     const resourceChange = change.ResourceChange;
     totals[resourceChange.Action] += 1;
