@@ -11,13 +11,6 @@ const cfn = new CloudFormation();
  * @param {import('@aws-sdk/client-cloudformation').ResourceChange} resourceChange
  */
 function logChange(resourceChange) {
-  console.log();
-  if (resourceChange.Action === "Modify" && resourceChange.Replacement !== "False") {
-    console.log(
-      chalk.red(`# [!] WARNING: ${resourceChange.LogicalResourceId} may be replaced due to the following changes:`)
-    );
-  }
-
   const before = resourceChange.BeforeContext ? JSON.parse(resourceChange.BeforeContext) : undefined;
   const after = resourceChange.AfterContext ? JSON.parse(resourceChange.AfterContext) : undefined;
   if (before) before.Type = resourceChange.ResourceType;
@@ -50,15 +43,21 @@ async function printChangeSet(changeSetId, stackName, path) {
   for (let change of response.Changes ?? []) {
     const resourceChange = change.ResourceChange;
     if (!resourceChange) continue;
-    if (resourceChange.Action) totals[resourceChange.Action] += 1;
     const logicalId = `${path}${resourceChange.LogicalResourceId}`;
+    console.log();
+    if (resourceChange.Action === "Modify" && resourceChange.Replacement !== "False") {
+      console.log(chalk.red(`- ${logicalId}: # WARNING may be replaced due to the following changes:`));
+      totals.Add += 1;
+      totals.Remove += 1;
+    } else {
+      if (resourceChange.Action) totals[resourceChange.Action] += 1;
+    }
     logChange({
       ...change.ResourceChange,
       // handle rendering nested stack resources as MyNestedStack/MyResource
       LogicalResourceId: logicalId,
     });
     if (resourceChange.ChangeSetId) {
-      // todo better totals, since change sets are not super reliable
       const nestedTotals = await printChangeSet(resourceChange.ChangeSetId, undefined, `${logicalId}/`);
       totals.Add += nestedTotals.Add;
       totals.Modify += nestedTotals.Modify;
