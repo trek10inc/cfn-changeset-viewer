@@ -4,6 +4,12 @@
   "description": "View the details of a CloudFormation ChangeSet (including nested ones!) in a human-friendly way",
   "main": "index.mjs",
   "type": "module",
+  "scripts": {
+    "types": "tsc",
+    "change": "changeset add",
+    "version": "changeset version",
+    "release": "changeset publish"
+  },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/trek10inc/cfn-changeset-viewer.git"
@@ -32,6 +38,8 @@
     "cfn-changeset-viewer": "cli.mjs"
   },
   "devDependencies": {
-    "@changesets/cli": "^2.27.1"
+    "@changesets/cli": "^2.27.1",
+    "@types/yargs": "^17.0.32",
+    "typescript": "^5.4.5"
   }
 }
