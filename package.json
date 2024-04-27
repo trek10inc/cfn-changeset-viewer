@@ -30,5 +30,8 @@
   },
   "bin": {
     "cfn-changeset-viewer": "cli.mjs"
+  },
+  "devDependencies": {
+    "@changesets/cli": "^2.27.1"
   }
 }
