@@ -41,5 +41,8 @@
     "@changesets/cli": "^2.27.1",
     "@types/yargs": "^17.0.32",
     "typescript": "^5.4.5"
+  },
+  "publishConfig": {
+    "access": "public"
   }
 }
