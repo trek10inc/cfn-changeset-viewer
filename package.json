@@ -1,8 +1,15 @@
 {
   "name": "cfn-changeset-viewer",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "description": "View the details of a CloudFormation ChangeSet (including nested ones!) in a human-friendly way",
-  "main": "index.js",
+  "main": "index.mjs",
+  "type": "module",
+  "scripts": {
+    "types": "tsc",
+    "change": "changeset add",
+    "version": "changeset version",
+    "release": "changeset publish"
+  },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/trek10inc/cfn-changeset-viewer.git"
@@ -23,11 +30,16 @@
   },
   "homepage": "https://github.com/trek10inc/cfn-changeset-viewer#readme",
   "dependencies": {
-    "aws-sdk": "^2.1250.0",
+    "@aws-sdk/client-cloudformation": "^3.556.0",
     "chalk": "^4.1.2",
     "yargs": "^17.6.2"
   },
   "bin": {
-    "cfn-changeset-viewer": "index.js"
+    "cfn-changeset-viewer": "cli.mjs"
+  },
+  "devDependencies": {
+    "@changesets/cli": "^2.27.1",
+    "@types/yargs": "^17.0.32",
+    "typescript": "^5.4.5"
   }
 }
