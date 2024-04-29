@@ -9,21 +9,30 @@ const cfn = new CloudFormation();
 
 /**
  * @param {import('@aws-sdk/client-cloudformation').ResourceChange} resourceChange
+ * @param {boolean} showUnchangedProperties
  */
-function logChange(resourceChange) {
+function logChange(resourceChange, showUnchangedProperties) {
   const before = resourceChange.BeforeContext ? JSON.parse(resourceChange.BeforeContext) : undefined;
   const after = resourceChange.AfterContext ? JSON.parse(resourceChange.AfterContext) : undefined;
   if (before) before.Type = resourceChange.ResourceType;
   if (after) after.Type = resourceChange.ResourceType;
-  logDiff(before, after, resourceChange.Action ?? "Default", resourceChange.LogicalResourceId);
+  logDiff(
+    before,
+    after,
+    resourceChange.Action ?? "Default",
+    resourceChange.LogicalResourceId,
+    "",
+    showUnchangedProperties,
+  );
 }
 
 /**
  * @param {string} changeSetId
  * @param {string} [stackName]
  * @param {string} [path]
+ * @param {boolean} [showUnchangedProperties]
  */
-async function printChangeSet(changeSetId, stackName, path) {
+async function printChangeSet(changeSetId, stackName, path, showUnchangedProperties) {
   const totals = {
     Add: 0,
     Modify: 0,
@@ -37,7 +46,7 @@ async function printChangeSet(changeSetId, stackName, path) {
       ChangeSetName: changeSetId,
       StackName: stackName,
       IncludePropertyValues: true,
-    })
+    }),
   );
 
   for (let change of response.Changes ?? []) {
@@ -52,11 +61,14 @@ async function printChangeSet(changeSetId, stackName, path) {
     } else {
       if (resourceChange.Action) totals[resourceChange.Action] += 1;
     }
-    logChange({
-      ...change.ResourceChange,
-      // handle rendering nested stack resources as MyNestedStack/MyResource
-      LogicalResourceId: logicalId,
-    });
+    logChange(
+      {
+        ...change.ResourceChange,
+        // handle rendering nested stack resources as MyNestedStack/MyResource
+        LogicalResourceId: logicalId,
+      },
+      showUnchangedProperties ?? false,
+    );
     if (resourceChange.ChangeSetId) {
       const nestedTotals = await printChangeSet(resourceChange.ChangeSetId, undefined, `${logicalId}/`);
       totals.Add += nestedTotals.Add;
@@ -73,21 +85,20 @@ export async function main() {
   const args = await yargs(hideBin(process.argv))
     .option("change-set-name", {
       description: "The name or ARN of the change set",
+      type: "string",
     })
     .option("stack-name", {
       description: "The name of the stack, only required if the change set ARN is not specified",
+      type: "string",
+    })
+    .option("show-unchanged-properties", {
+      description: "Show unchanged properties in the diff",
+      type: "boolean",
     })
     .demandOption("change-set-name")
     .help().argv;
-  if (typeof args.changeSetName !== "string") {
-    console.log("Invalid arguments, change-set-name must be a string, received: ", args.changeSetName);
-    process.exit(1);
-  } else if (args.stackName && typeof args.stackName !== "string") {
-    console.log("Invalid arguments, stack-name must be a string, received: ", args.stackName);
-    process.exit(1);
-  }
 
-  const totals = await printChangeSet(args.changeSetName, /** @type {string | undefined} */ (args.stackName));
+  const totals = await printChangeSet(args.changeSetName, args.stackName, "", args.showUnchangedProperties);
   console.log();
   console.log(`${totals.Add} resources added`);
   console.log(`${totals.Modify} resources modified`);
