@@ -41,13 +41,26 @@ async function printChangeSet(changeSetId, stackName, path, showUnchangedPropert
     Dynamic: 0,
   };
   if (!path) path = "";
-  const response = await cfn.send(
-    new DescribeChangeSetCommand({
-      ChangeSetName: changeSetId,
-      StackName: stackName,
-      IncludePropertyValues: true,
-    }),
-  );
+  let response;
+  let attempts = 0;
+
+  while (!response) {
+    try {
+      response = await cfn.send(
+        new DescribeChangeSetCommand({
+          ChangeSetName: changeSetId,
+          StackName: stackName,
+          IncludePropertyValues: true,
+        }),
+      );
+    } catch (err) {
+      if (!(err instanceof Error)) throw err;
+      if (err.name !== "Throttling") throw err;
+      if (attempts++ > 5) throw err;
+      // exponential backoff sleep with jitter
+      await new Promise((resolve) => setTimeout(resolve, 2 ** attempts * 1000 + Math.random() * 1000));
+    }
+  }
 
   for (let change of response.Changes ?? []) {
     const resourceChange = change.ResourceChange;

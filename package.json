@@ -1,6 +1,6 @@
 {
   "name": "cfn-changeset-viewer",
-  "version": "0.0.4",
+  "version": "0.0.5",
   "description": "View the details of a CloudFormation ChangeSet (including nested ones!) in a human-friendly way",
   "main": "index.mjs",
   "type": "module",
