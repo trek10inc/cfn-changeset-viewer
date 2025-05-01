@@ -2,27 +2,35 @@
   description = "cfn-changeset-viewer";
 
   inputs = {
-    nixpkgs.url = "github:NixOS/nixpkgs/release-23.11";
+    flake-parts.url = "github:hercules-ci/flake-parts";
+    nixpkgs.url = "github:NixOS/nixpkgs/release-24.05";
   };
-  outputs = { nixpkgs, ... }:
-    let
-      shell = { system }:
+  outputs =
+    inputs@{ self, flake-parts, ... }:
+    flake-parts.lib.mkFlake { inherit inputs; } {
+      perSystem =
+        { self', pkgs, ... }:
         let
-          pkgs = import nixpkgs {
-            system = system;
-          };
+          buildNpmPackage = pkgs.buildNpmPackage.override { nodejs = pkgs.nodejs_20; };
         in
-        pkgs.mkShell {
-          buildInputs = [
-            pkgs.awscli2
-            pkgs.nodejs_20
-          ];
+        {
+          packages = {
+            cfn-changeset-viewer = buildNpmPackage {
+              pname = "cfn-changeset-viewer";
+              version = toString (self.shortRev or self.dirtyShortRev or self.lastModified or "unknown");
+              src = ./.;
+              npmDepsHash = "sha256-ICaGtofENMaAjk/KGRn8RgpMAICSttx4AIcbi1HsW8Q=";
+              dontNpmBuild = true;
+              meta.mainProgram = "cfn-changeset-viewer";
+            };
+            default = self'.packages.cfn-changeset-viewer;
+          };
+
+          devShells.default = pkgs.mkShell {
+            packages = [ pkgs.awscli2 ];
+            inputsFrom = [ self'.packages.default ];
+          };
         };
-    in
-    {
-      devShells.aarch64-darwin.default = shell { system = "aarch64-darwin"; };
-      devShells.x86_64-darwin.default = shell { system = "x86_64-darwin"; };
-      devShells.aarch64-linux.default = shell { system = "aarch64-linux"; };
-      devShells.x86_64-linux.default = shell { system = "x86_64-linux"; };
+      systems = inputs.nixpkgs.lib.systems.flakeExposed;
     };
 }
