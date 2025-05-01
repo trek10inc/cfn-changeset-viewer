@@ -10,6 +10,7 @@ Options:
   --version                    Show version number [boolean]
   --change-set-name            The name or ARN of the change set [string] [required]
   --stack-name                 The name of the stack, only required if the change set ARN is not specified [string]
+  --region                     The AWS region where the change-set is located [string]
   --show-unchanged-properties  Show unchanged properties in the diff [boolean]
   --help                       Show help [boolean]
 Usage:

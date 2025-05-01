@@ -5,8 +5,6 @@ import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
 import { logDiff } from "./lib/diff.mjs";
 
-const cfn = new CloudFormation();
-
 /**
  * @param {import('@aws-sdk/client-cloudformation').ResourceChange} resourceChange
  * @param {boolean} showUnchangedProperties
@@ -27,12 +25,13 @@ function logChange(resourceChange, showUnchangedProperties) {
 }
 
 /**
+ * @param {CloudFormation} cfn
  * @param {string} changeSetId
  * @param {string} [stackName]
  * @param {string} [path]
  * @param {boolean} [showUnchangedProperties]
  */
-async function printChangeSet(changeSetId, stackName, path, showUnchangedProperties) {
+async function printChangeSet(cfn, changeSetId, stackName, path, showUnchangedProperties) {
   const totals = {
     Add: 0,
     Modify: 0,
@@ -83,7 +82,7 @@ async function printChangeSet(changeSetId, stackName, path, showUnchangedPropert
       showUnchangedProperties ?? false,
     );
     if (resourceChange.ChangeSetId) {
-      const nestedTotals = await printChangeSet(resourceChange.ChangeSetId, undefined, `${logicalId}/`);
+      const nestedTotals = await printChangeSet(cfn, resourceChange.ChangeSetId, undefined, `${logicalId}/`);
       totals.Add += nestedTotals.Add;
       totals.Modify += nestedTotals.Modify;
       totals.Remove += nestedTotals.Remove;
@@ -108,10 +107,20 @@ export async function main() {
       description: "Show unchanged properties in the diff",
       type: "boolean",
     })
+    .option("region", {
+      description: "The AWS region where the change-set is located",
+      type: "string",
+    })
     .demandOption("change-set-name")
     .help().argv;
 
-  const totals = await printChangeSet(args.changeSetName, args.stackName, "", args.showUnchangedProperties);
+  let cfnprops = {}
+  if (args.region) {
+    cfnprops.region = args.region
+  }
+  const cfn = new CloudFormation(cfnprops)
+
+  const totals = await printChangeSet(cfn, args.changeSetName, args.stackName, "", args.showUnchangedProperties);
   console.log();
   console.log(`${totals.Add} resources added`);
   console.log(`${totals.Modify} resources modified`);
