@@ -1,5 +1,11 @@
 # cfn-changeset-viewer
 
+## 0.2.0
+
+### Minor Changes
+
+- query for the latest change set if only given the stack name
+
 ## 0.1.0
 
 ### Minor Changes
