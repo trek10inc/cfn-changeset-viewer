@@ -1,5 +1,11 @@
 # cfn-changeset-viewer
 
+## 0.2.1
+
+### Patch Changes
+
+- remove debug log statement
+
 ## 0.2.0
 
 ### Minor Changes

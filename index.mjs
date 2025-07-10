@@ -50,7 +50,6 @@ async function printChangeSet(cfn, changeSetId, stackName, path, showUnchangedPr
       changeSetId = /** @type {string} */ (summariesWithChangeSets[summariesWithChangeSets.length - 1]?.ChangeSetId);
     }
   }
-  console.log(changeSetId);
   const totals = {
     Add: 0,
     Modify: 0,
