@@ -1,5 +1,5 @@
 import { fileURLToPath } from "url";
-import { CloudFormation, DescribeChangeSetCommand } from "@aws-sdk/client-cloudformation";
+import { CloudFormation, DescribeChangeSetCommand, paginateListChangeSets } from "@aws-sdk/client-cloudformation";
 import chalk from "chalk";
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
@@ -26,12 +26,31 @@ function logChange(resourceChange, showUnchangedProperties) {
 
 /**
  * @param {CloudFormation} cfn
- * @param {string} changeSetId
+ * @param {string} [changeSetId]
  * @param {string} [stackName]
  * @param {string} [path]
  * @param {boolean} [showUnchangedProperties]
  */
 async function printChangeSet(cfn, changeSetId, stackName, path, showUnchangedProperties) {
+  if (!changeSetId) {
+    if (!stackName) {
+      throw new Error("Either changeSetId or stackName must be provided");
+    }
+    const paginator = paginateListChangeSets(
+      {
+        client: cfn,
+      },
+      { StackName: stackName },
+    );
+    for await (const page of paginator) {
+      if (!page.Summaries) {
+        continue;
+      }
+      const summariesWithChangeSets = page.Summaries.filter((s) => s.ChangeSetId !== undefined);
+      changeSetId = /** @type {string} */ (summariesWithChangeSets[summariesWithChangeSets.length - 1]?.ChangeSetId);
+    }
+  }
+  console.log(changeSetId);
   const totals = {
     Add: 0,
     Modify: 0,
@@ -111,22 +130,26 @@ export async function main() {
       description: "The AWS region where the change-set is located",
       type: "string",
     })
-    .demandOption("change-set-name")
     .help().argv;
 
-  let cfnprops = {}
+  let cfnprops = {};
   if (args.region) {
-    cfnprops.region = args.region
+    cfnprops.region = args.region;
   }
-  const cfn = new CloudFormation(cfnprops)
+  const cfn = new CloudFormation(cfnprops);
 
-  const totals = await printChangeSet(cfn, args.changeSetName, args.stackName, "", args.showUnchangedProperties);
-  console.log();
-  console.log(`${totals.Add} resources added`);
-  console.log(`${totals.Modify} resources modified`);
-  console.log(`${totals.Remove} resources removed`);
-  console.log(`${totals.Import} resources imported`);
-  console.log(`${totals.Dynamic} undetermined resources`);
+  try {
+    const totals = await printChangeSet(cfn, args.changeSetName, args.stackName, "", args.showUnchangedProperties);
+    console.log();
+    console.log(`${totals.Add} resources added`);
+    console.log(`${totals.Modify} resources modified`);
+    console.log(`${totals.Remove} resources removed`);
+    console.log(`${totals.Import} resources imported`);
+    console.log(`${totals.Dynamic} undetermined resources`);
+  } catch (err) {
+    console.log(`Error printing ChangeSet: ${err}`);
+    process.exit(1);
+  }
 }
 
 if (process.argv[1] === fileURLToPath(import.meta.url)) {
