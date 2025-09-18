@@ -1,4 +1,5 @@
-import { fileURLToPath } from "url";
+import { readFileSync } from "node:fs";
+import { fileURLToPath } from "node:url";
 import { CloudFormation, DescribeChangeSetCommand, paginateListChangeSets } from "@aws-sdk/client-cloudformation";
 import chalk from "chalk";
 import yargs from "yargs";
@@ -26,47 +27,21 @@ function logChange(resourceChange, showUnchangedProperties) {
 
 /**
  * @param {CloudFormation} cfn
- * @param {string} [changeSetId]
- * @param {string} [stackName]
- * @param {string} [path]
- * @param {boolean} [showUnchangedProperties]
+ * @param {string} changeSetId
  */
-async function printChangeSet(cfn, changeSetId, stackName, path, showUnchangedProperties) {
-  if (!changeSetId) {
-    if (!stackName) {
-      throw new Error("Either changeSetId or stackName must be provided");
-    }
-    const paginator = paginateListChangeSets(
-      {
-        client: cfn,
-      },
-      { StackName: stackName },
-    );
-    for await (const page of paginator) {
-      if (!page.Summaries) {
-        continue;
-      }
-      const summariesWithChangeSets = page.Summaries.filter((s) => s.ChangeSetId !== undefined);
-      changeSetId = /** @type {string} */ (summariesWithChangeSets[summariesWithChangeSets.length - 1]?.ChangeSetId);
-    }
+async function getChangeSetChanges(cfn, changeSetId) {
+  if (changeSetId.startsWith("file://")) {
+    const contents = readFileSync(changeSetId.replace("file://", ""), "utf-8");
+    const changeSet = JSON.parse(contents);
+    return /** @type {Array<import("@aws-sdk/client-cloudformation").Change>} */ (changeSet.Changes ?? []);
   }
-  const totals = {
-    Add: 0,
-    Modify: 0,
-    Remove: 0,
-    Import: 0,
-    Dynamic: 0,
-  };
-  if (!path) path = "";
   let response;
   let attempts = 0;
-
   while (!response) {
     try {
       response = await cfn.send(
         new DescribeChangeSetCommand({
           ChangeSetName: changeSetId,
-          StackName: stackName,
           IncludePropertyValues: true,
         }),
       );
@@ -78,8 +53,36 @@ async function printChangeSet(cfn, changeSetId, stackName, path, showUnchangedPr
       await new Promise((resolve) => setTimeout(resolve, 2 ** attempts * 1000 + Math.random() * 1000));
     }
   }
+  return response.Changes ?? [];
+}
 
-  for (let change of response.Changes ?? []) {
+/**
+ * @param {CloudFormation} cfn
+ * @param {string} changeSetId
+ * @param {string} [path]
+ * @param {boolean} [showUnchangedProperties]
+ */
+async function printChangeSet(cfn, changeSetId, path, showUnchangedProperties) {
+  /** @type {Record<string, import("@aws-sdk/client-cloudformation").ResourceChangeDetail>} */
+  const changeDetailsByPath = {};
+  for (const change of await getChangeSetChanges(cfn, changeSetId)) {
+    for (const detail of change.ResourceChange?.Details ?? []) {
+      if (detail.Target?.Path) {
+        changeDetailsByPath[detail.Target?.Path] = detail;
+      }
+    }
+  }
+  const totals = {
+    Add: 0,
+    Modify: 0,
+    Remove: 0,
+    Import: 0,
+    Dynamic: 0,
+  };
+  if (!path) path = "";
+
+  const changes = await getChangeSetChanges(cfn, changeSetId);
+  for (const change of changes) {
     const resourceChange = change.ResourceChange;
     if (!resourceChange) continue;
     const logicalId = `${path}${resourceChange.LogicalResourceId}`;
@@ -100,7 +103,12 @@ async function printChangeSet(cfn, changeSetId, stackName, path, showUnchangedPr
       showUnchangedProperties ?? false,
     );
     if (resourceChange.ChangeSetId) {
-      const nestedTotals = await printChangeSet(cfn, resourceChange.ChangeSetId, undefined, `${logicalId}/`);
+      const nestedTotals = await printChangeSet(
+        cfn,
+        resourceChange.ChangeSetId,
+        `${logicalId}/`,
+        showUnchangedProperties,
+      );
       totals.Add += nestedTotals.Add;
       totals.Modify += nestedTotals.Modify;
       totals.Remove += nestedTotals.Remove;
@@ -113,8 +121,12 @@ async function printChangeSet(cfn, changeSetId, stackName, path, showUnchangedPr
 
 export async function main() {
   const args = await yargs(hideBin(process.argv))
+    .option("change-set-file", {
+      description: "A path to a file that has the ChangeSet JSON (does not support nested stacks)",
+      type: "string",
+    })
     .option("change-set-name", {
-      description: "The name or ARN of the change set",
+      description: "The name, ARN, or file:// path of the change set",
       type: "string",
     })
     .option("stack-name", {
@@ -131,14 +143,37 @@ export async function main() {
     })
     .help().argv;
 
-  let cfnprops = {};
+  const cfnprops = {};
   if (args.region) {
     cfnprops.region = args.region;
   }
   const cfn = new CloudFormation(cfnprops);
 
   try {
-    const totals = await printChangeSet(cfn, args.changeSetName, args.stackName, "", args.showUnchangedProperties);
+    /** @type {string} */
+    let changeSetId;
+
+    if (!args.changeSetName) {
+      // if no changeSetId is provided, get the latest change set for the stack
+      if (!args.stackName) {
+        throw new Error("Either changeSetId or stackName must be provided");
+      }
+      const paginator = paginateListChangeSets({ client: cfn }, { StackName: args.stackName });
+      let latestChangeSet;
+      for await (const page of paginator) {
+        if (!page.Summaries) continue;
+        const summariesWithChangeSets = page.Summaries.filter((s) => s.ChangeSetId !== undefined);
+        latestChangeSet = summariesWithChangeSets[summariesWithChangeSets.length - 1];
+      }
+      if (!latestChangeSet || !latestChangeSet.ChangeSetId) {
+        throw new Error(`No change sets found for stack ${args.stackName}`);
+      }
+      changeSetId = latestChangeSet?.ChangeSetId;
+    } else {
+      changeSetId = args.changeSetName;
+    }
+
+    const totals = await printChangeSet(cfn, changeSetId, "", args.showUnchangedProperties);
     console.log();
     console.log(`${totals.Add} resources added`);
     console.log(`${totals.Modify} resources modified`);
