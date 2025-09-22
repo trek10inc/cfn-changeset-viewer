@@ -6,9 +6,7 @@
   "type": "module",
   "scripts": {
     "types": "tsc",
-    "change": "changeset add",
-    "version": "changeset version",
-    "release": "changeset publish"
+    "test": "node --test"
   },
   "repository": {
     "type": "git",
@@ -39,7 +37,6 @@
   },
   "devDependencies": {
     "@biomejs/biome": "^2.2.4",
-    "@changesets/cli": "^2.27.1",
     "@types/node": "^24.5.2",
     "@types/yargs": "^17.0.32",
     "typescript": "^5.4.5"

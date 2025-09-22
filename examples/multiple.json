@@ -1,0 +1,125 @@
+{
+  "Changes": [
+    {
+      "Type": "Resource",
+      "ResourceChange": {
+        "Action": "Add",
+        "LogicalResourceId": "BucketToAdd",
+        "ResourceType": "AWS::S3::Bucket",
+        "Scope": [],
+        "Details": [],
+        "AfterContext": "{\"Properties\":{}}"
+      }
+    },
+    {
+      "Type": "Resource",
+      "ResourceChange": {
+        "PolicyAction": "Delete",
+        "Action": "Remove",
+        "LogicalResourceId": "BucketToRemove",
+        "PhysicalResourceId": "multiple-buckettoremove-rbrvgdfbpymb",
+        "ResourceType": "AWS::S3::Bucket",
+        "Scope": [],
+        "Details": [],
+        "BeforeContext": "{\"Properties\":{}}"
+      }
+    },
+    {
+      "Type": "Resource",
+      "ResourceChange": {
+        "Action": "Modify",
+        "LogicalResourceId": "BucketToUpdate",
+        "PhysicalResourceId": "multiple-buckettoupdate-ip4bntzuooxd",
+        "ResourceType": "AWS::S3::Bucket",
+        "Replacement": "False",
+        "Scope": ["Properties"],
+        "Details": [
+          {
+            "Target": {
+              "Attribute": "Properties",
+              "Name": "VersioningConfiguration",
+              "RequiresRecreation": "Never",
+              "Path": "/Properties/VersioningConfiguration",
+              "AfterValue": "{\"Status\":\"Enabled\"}",
+              "AttributeChangeType": "Add"
+            },
+            "Evaluation": "Static",
+            "ChangeSource": "DirectModification"
+          }
+        ],
+        "BeforeContext": "{\"Properties\":{}}",
+        "AfterContext": "{\"Properties\":{\"VersioningConfiguration\":{\"Status\":\"Enabled\"}}}"
+      }
+    },
+    {
+      "Type": "Resource",
+      "ResourceChange": {
+        "Action": "Modify",
+        "LogicalResourceId": "BucketWithTags",
+        "PhysicalResourceId": "multiple-bucketwithtags-jjk6rix58ano",
+        "ResourceType": "AWS::S3::Bucket",
+        "Replacement": "False",
+        "Scope": ["Tags"],
+        "Details": [
+          {
+            "Target": {
+              "Attribute": "Tags",
+              "RequiresRecreation": "Never",
+              "Path": "/Properties/Tags/1/Key",
+              "BeforeValue": "ToRemove",
+              "AfterValue": "ToAdd",
+              "AttributeChangeType": "Modify"
+            },
+            "Evaluation": "Static",
+            "ChangeSource": "DirectModification"
+          },
+          {
+            "Target": {
+              "Attribute": "Tags",
+              "RequiresRecreation": "Never",
+              "Path": "/Properties/Tags/1/Value",
+              "BeforeValue": "Bar",
+              "AfterValue": "Baz",
+              "AttributeChangeType": "Modify"
+            },
+            "Evaluation": "Static",
+            "ChangeSource": "DirectModification"
+          },
+          {
+            "Target": {
+              "Attribute": "Tags",
+              "RequiresRecreation": "Never",
+              "Path": "/Properties/Tags/2/Value",
+              "BeforeValue": "Hello",
+              "AfterValue": "World",
+              "AttributeChangeType": "Modify"
+            },
+            "Evaluation": "Static",
+            "ChangeSource": "DirectModification"
+          }
+        ],
+        "BeforeContext": "{\"Properties\":{\"Tags\":[{\"Value\":\"Foo\",\"Key\":\"ToKeep\"},{\"Value\":\"Bar\",\"Key\":\"ToRemove\"},{\"Value\":\"Hello\",\"Key\":\"ToUpdate\"}]}}",
+        "AfterContext": "{\"Properties\":{\"Tags\":[{\"Value\":\"Foo\",\"Key\":\"ToKeep\"},{\"Value\":\"Baz\",\"Key\":\"ToAdd\"},{\"Value\":\"World\",\"Key\":\"ToUpdate\"}]}}"
+      }
+    }
+  ],
+  "ChangeSetName": "ee67ddf5-f139-41f6-9c47-38780ef6d7e5",
+  "ChangeSetId": "arn:aws:cloudformation:us-east-2:999999999999:changeSet/ee67ddf5-f139-41f6-9c47-38780ef6d7e5/4d1a0ef2-4f71-42cf-82ef-1a1b52a7d188",
+  "StackId": "arn:aws:cloudformation:us-east-2:999999999999:stack/multiple/243c5be0-942d-11f0-90c7-0a9746b138f5",
+  "StackName": "multiple",
+  "Description": null,
+  "Parameters": null,
+  "CreationTime": "2025-09-18T01:19:40.500000+00:00",
+  "ExecutionStatus": "AVAILABLE",
+  "Status": "CREATE_COMPLETE",
+  "StatusReason": null,
+  "NotificationARNs": [],
+  "RollbackConfiguration": {},
+  "Capabilities": [],
+  "Tags": null,
+  "ParentChangeSetId": null,
+  "IncludeNestedStacks": false,
+  "RootChangeSetId": null,
+  "OnStackFailure": null,
+  "ImportExistingResources": null
+}

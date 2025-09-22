@@ -1,0 +1,11 @@
+.github
+examples
+*.test.*
+nix
+.editorconfig
+.prettierrc
+biome.json
+CHANGELOG.md
+flake.lock
+flake.nix
+tsconfig.json

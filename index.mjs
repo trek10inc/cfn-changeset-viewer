@@ -1,27 +1,122 @@
 import { readFileSync } from "node:fs";
+import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { CloudFormation, DescribeChangeSetCommand, paginateListChangeSets } from "@aws-sdk/client-cloudformation";
-import chalk from "chalk";
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
-import { logDiff } from "./lib/diff.mjs";
+import { logObjectDiff } from "./lib/diff.mjs";
+
+/**
+ * @template T
+ * @param {object} obj
+ * @param {string} path
+ * @param {T} value
+ */
+function set(obj, path, value) {
+  const keys = path.split("/").filter((x) => x);
+  let current = obj;
+
+  for (let i = 0; i < keys.length - 1; i++) {
+    const key = keys[i];
+    // @ts-expect-error
+    if (!(key in current) || typeof current[key] !== "object") {
+      // @ts-expect-error
+      current[key] = {};
+    }
+    // @ts-expect-error
+    current = current[key];
+  }
+
+  // @ts-expect-error
+  current[keys[keys.length - 1]] = value;
+}
+
+/**
+ * @param {object} obj
+ * @param {string[]} keys
+ */
+function sortObject(obj, keys) {
+  const result = {};
+  for (const key of keys) {
+    if (key in obj) {
+      // @ts-expect-error
+      result[key] = obj[key];
+    }
+  }
+  return Object.assign(result, obj);
+}
 
 /**
  * @param {import('@aws-sdk/client-cloudformation').ResourceChange} resourceChange
- * @param {boolean} showUnchangedProperties
+ * @param {object} [options]
+ * @param {boolean} [options.showUnchangedProperties]
  */
-function logChange(resourceChange, showUnchangedProperties) {
-  const before = resourceChange.BeforeContext ? JSON.parse(resourceChange.BeforeContext) : undefined;
-  const after = resourceChange.AfterContext ? JSON.parse(resourceChange.AfterContext) : undefined;
-  if (before) before.Type = resourceChange.ResourceType;
-  if (after) after.Type = resourceChange.ResourceType;
-  logDiff(
+function logChange(resourceChange, options = {}) {
+  /** @type {*} */
+  const beforeStackTags = {};
+  /** @type {*} */
+  const afterStackTags = {};
+  /** @type {Record<string, string>} */
+  const replacementNotes = {};
+
+  for (const detail of resourceChange.Details ?? []) {
+    if (!detail.Target) continue;
+    if (!detail.Target.Path) continue;
+    if (detail.Target.Attribute === "Tags" && detail.Target.Path?.startsWith("/Tags")) {
+      set(beforeStackTags, detail.Target.Path, detail.Target.BeforeValue);
+      set(afterStackTags, detail.Target.Path, detail.Target.AfterValue);
+    }
+    if (detail.Target.RequiresRecreation === "Always") {
+      replacementNotes[join(resourceChange.LogicalResourceId ?? "", detail.Target.Path)] =
+        `WARNING: Requires Replacement! Policy: ${resourceChange.PolicyAction}`;
+    } else if (detail.Target.RequiresRecreation === "Conditionally") {
+      replacementNotes[join(resourceChange.LogicalResourceId ?? "", detail.Target.Path)] =
+        `May require replacement! Policy: ${resourceChange.PolicyAction}`;
+    }
+  }
+
+  /** @type {*} */
+  const before = {};
+  /** @type {*} */
+  const after = {};
+  if (resourceChange.BeforeContext) {
+    resourceChange.BeforeContext ? JSON.parse(resourceChange.BeforeContext) : undefined;
+    before[resourceChange.LogicalResourceId ?? ""] = sortObject(
+      {
+        Type: resourceChange.ResourceType,
+        ...JSON.parse(resourceChange.BeforeContext),
+      },
+      ["Type", "DeletionPolicy", "UpdateReplacePolicy", "Properties", "StackTags"],
+    );
+  }
+  if (resourceChange.AfterContext) {
+    resourceChange.AfterContext ? JSON.parse(resourceChange.AfterContext) : undefined;
+    after[resourceChange.LogicalResourceId ?? ""] = sortObject(
+      {
+        Type: resourceChange.ResourceType,
+        ...JSON.parse(resourceChange.AfterContext),
+      },
+      ["Type", "DeletionPolicy", "UpdateReplacePolicy", "Properties", "StackTags"],
+    );
+  }
+  if (Object.keys(beforeStackTags).length > 0) {
+    before[resourceChange.LogicalResourceId ?? ""].StackTags = Object.values(beforeStackTags.Tags);
+  }
+  if (Object.keys(afterStackTags).length > 0) {
+    after[resourceChange.LogicalResourceId ?? ""].StackTags = Object.values(afterStackTags.Tags);
+  }
+  logObjectDiff(
     before,
     after,
-    resourceChange.Action ?? "Default",
-    resourceChange.LogicalResourceId,
-    "",
-    showUnchangedProperties,
+    {
+      action:
+        resourceChange.Replacement === "True" ? "Remove" : resourceChange.Action === "Import" ? "Import" : undefined,
+      showUnchangedProperties: options.showUnchangedProperties ?? false,
+    },
+    replacementNotes,
+    // {
+    //   "BucketToReplace/Properties/BucketName": "hello!",
+    // },
   );
 }
 
@@ -59,19 +154,14 @@ async function getChangeSetChanges(cfn, changeSetId) {
 /**
  * @param {CloudFormation} cfn
  * @param {string} changeSetId
+ * @param {object} [options]
+ * @param {boolean} [options.showUnchangedProperties]
+ * @param {boolean} [options.showColor]
  * @param {string} [path]
- * @param {boolean} [showUnchangedProperties]
  */
-async function printChangeSet(cfn, changeSetId, path, showUnchangedProperties) {
-  /** @type {Record<string, import("@aws-sdk/client-cloudformation").ResourceChangeDetail>} */
-  const changeDetailsByPath = {};
-  for (const change of await getChangeSetChanges(cfn, changeSetId)) {
-    for (const detail of change.ResourceChange?.Details ?? []) {
-      if (detail.Target?.Path) {
-        changeDetailsByPath[detail.Target?.Path] = detail;
-      }
-    }
-  }
+async function printChangeSet(cfn, changeSetId, options = undefined, path = "") {
+  const changes = await getChangeSetChanges(cfn, changeSetId);
+
   const totals = {
     Add: 0,
     Modify: 0,
@@ -79,36 +169,28 @@ async function printChangeSet(cfn, changeSetId, path, showUnchangedProperties) {
     Import: 0,
     Dynamic: 0,
   };
-  if (!path) path = "";
 
-  const changes = await getChangeSetChanges(cfn, changeSetId);
   for (const change of changes) {
     const resourceChange = change.ResourceChange;
     if (!resourceChange) continue;
-    const logicalId = `${path}${resourceChange.LogicalResourceId}`;
-    console.log();
     if (resourceChange.Action === "Modify" && resourceChange.Replacement !== "False") {
-      console.log(chalk.red(`- ${logicalId}: # WARNING may be replaced due to the following changes:`));
       totals.Add += 1;
       totals.Remove += 1;
     } else {
       if (resourceChange.Action) totals[resourceChange.Action] += 1;
     }
+
+    const logicalId = `${path}${resourceChange.LogicalResourceId}`;
     logChange(
       {
         ...change.ResourceChange,
         // handle rendering nested stack resources as MyNestedStack/MyResource
         LogicalResourceId: logicalId,
       },
-      showUnchangedProperties ?? false,
+      options,
     );
     if (resourceChange.ChangeSetId) {
-      const nestedTotals = await printChangeSet(
-        cfn,
-        resourceChange.ChangeSetId,
-        `${logicalId}/`,
-        showUnchangedProperties,
-      );
+      const nestedTotals = await printChangeSet(cfn, resourceChange.ChangeSetId, options, `${logicalId}/`);
       totals.Add += nestedTotals.Add;
       totals.Modify += nestedTotals.Modify;
       totals.Remove += nestedTotals.Remove;
@@ -121,10 +203,6 @@ async function printChangeSet(cfn, changeSetId, path, showUnchangedProperties) {
 
 export async function main() {
   const args = await yargs(hideBin(process.argv))
-    .option("change-set-file", {
-      description: "A path to a file that has the ChangeSet JSON (does not support nested stacks)",
-      type: "string",
-    })
     .option("change-set-name", {
       description: "The name, ARN, or file:// path of the change set",
       type: "string",
@@ -132,6 +210,11 @@ export async function main() {
     .option("stack-name", {
       description: "The name of the stack, only required if the change set ARN is not specified",
       type: "string",
+    })
+    .option("no-color", {
+      description: "Disable color output",
+      type: "boolean",
+      default: false,
     })
     .option("show-unchanged-properties", {
       description: "Show unchanged properties in the diff",
@@ -173,8 +256,16 @@ export async function main() {
       changeSetId = args.changeSetName;
     }
 
-    const totals = await printChangeSet(cfn, changeSetId, "", args.showUnchangedProperties);
-    console.log();
+    const totals = await printChangeSet(
+      cfn,
+      changeSetId,
+      {
+        showUnchangedProperties: args.showUnchangedProperties,
+        showColor: !args.noColor,
+      },
+      "",
+    );
+    console.log("===== Results =====");
     console.log(`${totals.Add} resources added`);
     console.log(`${totals.Modify} resources modified`);
     console.log(`${totals.Remove} resources removed`);

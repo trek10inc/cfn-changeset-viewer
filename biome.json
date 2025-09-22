@@ -4,6 +4,13 @@
     "useEditorconfig": true,
     "lineWidth": 120
   },
+  "linter": {
+    "rules": {
+      "complexity": {
+        "noStaticOnlyClass": "off"
+      }
+    }
+  },
   "vcs": {
     "enabled": true,
     "useIgnoreFile": true,

@@ -5,16 +5,15 @@ This CLI will view the changes calculated in a CloudFormation ChangeSet in a mor
 ## Usage
 
 ```txt
-cfn-changeset-viewer <changeset-id>
+cfn-changeset-viewer <options>
 Options:
   --version                    Show version number [boolean]
-  --change-set-name            The name or ARN of the change set [string] [required]
+  --change-set-name            The name, ARN, or file:// path of the change set [string]
   --stack-name                 The name of the stack, only required if the change set ARN is not specified [string]
-  --region                     The AWS region where the change-set is located [string]
+  --no-color                   Disable color output [boolean] [default: false]
   --show-unchanged-properties  Show unchanged properties in the diff [boolean]
+  --region                     The AWS region where the change-set is located [string]
   --help                       Show help [boolean]
-Usage:
-  <changeset-id> the id of the changeset to view
 ```
 
 ## Display
@@ -29,41 +28,54 @@ A warning will be logged for resource changes that may result in a replacement.
 
 ```sh
 $ npx cfn-changeset-viewer --change-set-name arn:aws:cloudformation:us-east-1:123123123123:changeSet/release-42-1-FooBar
-
-  ApiStack:
+  MyNestedStackResouce:
     Properties:
--     TemplateURL: "https://s3.us-east-2.amazonaws.com/bucket/some-template.template"
-~     TemplateURL: "https://s3.us-east-2.amazonaws.com/bucket/some-other-template.template"
-
-  ApiStack/SomeRole:
+-     TemplateURL: "https://s3.us-east-2.amazonaws.com/mybucket/408996fc760779d1891d761517c12efe.template"
++     TemplateURL: "https://s3.us-east-2.amazonaws.com/mybucket/586265672cdf10ec6d2e2155635f1326.template"
++ MyNestedStackResouce/BucketToAdd:
++   Type: "AWS::S3::Bucket"
++   Properties: {}
+- MyNestedStackResouce/BucketToRemove:
+-   Type: "AWS::S3::Bucket"
+-   Properties: {}
+  # WARNING may be replaced:
+- MyNestedStackResouce/BucketToReplace:
+-   Type: "AWS::S3::Bucket"
+-   Properties:
+-     BucketName: "cfn-changeset-viewer-999999999999-us-east-2-bucket"
++     BucketName: "cfn-changeset-viewer-999999999999-us-east-2-bucket2"
+  MyNestedStackResouce/BucketToUpdate:
     Properties:
-      Policies:
-          PolicyDocument:
-            Statement:
-              - Action:
-~                 - "s3:PutObject"
-
-  Bucket:
++     VersioningConfiguration:
++       Status: "Enabled"
+  MyNestedStackResouce/BucketWithTags:
     Properties:
       Tags:
--       - Value: "changeset-test-bucket-old"
-~         Value: "changeset-test-bucket-new"
--         Key: "SomeOtherTag"
-~         Key: "SomeDifferentTag"
-
-  MyCooLStack:
-    Properties:
--     TemplateURL: "https://s3.us-east-2.amazonaws.com/bucket/some-template.template"
-~     TemplateURL: "https://s3.us-east-2.amazonaws.com/bucket/some-other-template.template"
-
-- OtherStack/Bucket: # WARNING may be replaced due to the following changes:
-  OtherStack/Bucket:
-    Properties:
-~     BucketName: "new-bucket-name"
-
-1 resources added
-4 resources modified
-1 resources removed
+        - Value: "Foo"
+          Key: "ToKeep"
+-       - Value: "Bar"
+-         Key: "ToRemove"
++       - Value: "Baz"
++         Key: "ToAdd"
+-       - Value: "Hello"
+-         Key: "ToUpdate"
++       - Value: "World"
++         Key: "ToUpdate"
+===== Results =====
+2 resources added
+3 resources modified
+2 resources removed
 0 resources imported
 0 undetermined resources
+```
+
+## Development
+
+This project is managed by [Nix](https://nixos.org/).
+Services Flake is used to run a test watcher as well as running the viewer against the [examples](./examples) directory.
+Read more about Services Flake [here](https://github.com/juspay/services-flake).
+To begin, make sure Nix is installed and run the following:
+
+```sh
+$ nix run .#dev
 ```
