@@ -1,0 +1,51 @@
+{
+  "Changes": [
+    {
+      "Type": "Resource",
+      "ResourceChange": {
+        "Action": "Modify",
+        "LogicalResourceId": "Bucket",
+        "PhysicalResourceId": "unchanged-properties-bucket-9secqwlchvtl",
+        "ResourceType": "AWS::S3::Bucket",
+        "Replacement": "False",
+        "Scope": ["Properties"],
+        "Details": [
+          {
+            "Target": {
+              "Attribute": "Properties",
+              "Name": "OwnershipControls",
+              "RequiresRecreation": "Never",
+              "Path": "/Properties/OwnershipControls/Rules/0/ObjectOwnership",
+              "BeforeValue": "BucketOwnerPreferred",
+              "AfterValue": "BucketOwnerEnforced",
+              "AttributeChangeType": "Modify"
+            },
+            "Evaluation": "Static",
+            "ChangeSource": "DirectModification"
+          }
+        ],
+        "BeforeContext": "{\"Properties\":{\"NotificationConfiguration\":{\"EventBridgeConfiguration\":{\"EventBridgeEnabled\":\"true\"}},\"VersioningConfiguration\":{\"Status\":\"Enabled\"},\"OwnershipControls\":{\"Rules\":[{\"ObjectOwnership\":\"BucketOwnerPreferred\"}]},\"Tags\":[{\"Value\":\"Production\",\"Key\":\"Environment\"},{\"Value\":\"UnchangedPropertiesExample\",\"Key\":\"Project\"}]}}",
+        "AfterContext": "{\"Properties\":{\"NotificationConfiguration\":{\"EventBridgeConfiguration\":{\"EventBridgeEnabled\":\"true\"}},\"VersioningConfiguration\":{\"Status\":\"Enabled\"},\"OwnershipControls\":{\"Rules\":[{\"ObjectOwnership\":\"BucketOwnerEnforced\"}]},\"Tags\":[{\"Value\":\"Production\",\"Key\":\"Environment\"},{\"Value\":\"UnchangedPropertiesExample\",\"Key\":\"Project\"}]}}"
+      }
+    }
+  ],
+  "ChangeSetName": "testfc85a1c1-6d85-48e7-a661-337f1efc1ed7",
+  "ChangeSetId": "arn:aws:cloudformation:us-east-2:999999999999:changeSet/testfc85a1c1-6d85-48e7-a661-337f1efc1ed7/5d83bf61-9bfd-4362-9498-4f633a17f674",
+  "StackId": "arn:aws:cloudformation:us-east-2:999999999999:stack/unchanged-properties/a378a2b0-9752-11f0-8803-060e0ef18063",
+  "StackName": "unchanged-properties",
+  "Description": null,
+  "Parameters": null,
+  "CreationTime": "2025-01-01T01:01:01.001000+00:00",
+  "ExecutionStatus": "AVAILABLE",
+  "Status": "CREATE_COMPLETE",
+  "StatusReason": null,
+  "NotificationARNs": [],
+  "RollbackConfiguration": {},
+  "Capabilities": [],
+  "Tags": null,
+  "ParentChangeSetId": null,
+  "IncludeNestedStacks": true,
+  "RootChangeSetId": null,
+  "OnStackFailure": null,
+  "ImportExistingResources": true
+}

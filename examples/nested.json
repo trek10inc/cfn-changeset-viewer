@@ -1,0 +1,52 @@
+{
+  "Changes": [
+    {
+      "Type": "Resource",
+      "ResourceChange": {
+        "Action": "Modify",
+        "LogicalResourceId": "Stack",
+        "PhysicalResourceId": "arn:aws:cloudformation:us-east-2:999999999999:stack/nested-Stack-1NP3WQ7ZB2ZT2/453a7b80-943a-11f0-91a7-0a1457c53e07",
+        "ResourceType": "AWS::CloudFormation::Stack",
+        "Replacement": "False",
+        "Scope": ["Properties"],
+        "Details": [
+          {
+            "Target": {
+              "Attribute": "Properties",
+              "Name": "TemplateURL",
+              "RequiresRecreation": "Never",
+              "Path": "/Properties/TemplateURL",
+              "BeforeValue": "https://s3.us-east-2.amazonaws.com/mybucket/408996fc760779d1891d761517c12efe.template",
+              "AfterValue": "https://s3.us-east-2.amazonaws.com/mybucket/586265672cdf10ec6d2e2155635f1326.template",
+              "AttributeChangeType": "Modify"
+            },
+            "Evaluation": "Static",
+            "ChangeSource": "DirectModification"
+          }
+        ],
+        "ChangeSetId": "file://examples/nested.nested.json",
+        "BeforeContext": "{\"Properties\":{\"TemplateURL\":\"https://s3.us-east-2.amazonaws.com/mybucket/408996fc760779d1891d761517c12efe.template\"}}",
+        "AfterContext": "{\"Properties\":{\"TemplateURL\":\"https://s3.us-east-2.amazonaws.com/mybucket/586265672cdf10ec6d2e2155635f1326.template\"}}"
+      }
+    }
+  ],
+  "ChangeSetName": "testc4f86796-eb9c-41a5-8e1a-bc3417c58b35",
+  "ChangeSetId": "arn:aws:cloudformation:us-east-2:999999999999:changeSet/testc4f86796-eb9c-41a5-8e1a-bc3417c58b35/c4cceb1c-0cf4-4cba-9b39-cbd14d47feca",
+  "StackId": "arn:aws:cloudformation:us-east-2:999999999999:stack/nested/fa52c320-9439-11f0-847a-02f626baf31f",
+  "StackName": "nested",
+  "Description": null,
+  "Parameters": null,
+  "CreationTime": "2025-01-01T01:01:01.001000+00:00",
+  "ExecutionStatus": "AVAILABLE",
+  "Status": "CREATE_COMPLETE",
+  "StatusReason": null,
+  "NotificationARNs": [],
+  "RollbackConfiguration": {},
+  "Capabilities": [],
+  "Tags": null,
+  "ParentChangeSetId": null,
+  "IncludeNestedStacks": true,
+  "RootChangeSetId": null,
+  "OnStackFailure": null,
+  "ImportExistingResources": null
+}

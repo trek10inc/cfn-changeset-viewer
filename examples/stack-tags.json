@@ -1,0 +1,180 @@
+{
+  "Changes": [
+    {
+      "Type": "Resource",
+      "ResourceChange": {
+        "Action": "Modify",
+        "LogicalResourceId": "Bucket2",
+        "PhysicalResourceId": "stack-tags-bucket2-zwgla2xkwvop",
+        "ResourceType": "AWS::S3::Bucket",
+        "Replacement": "False",
+        "Scope": ["Tags"],
+        "Details": [
+          {
+            "Target": {
+              "Attribute": "Tags",
+              "RequiresRecreation": "Never",
+              "Path": "/Tags/1/Value",
+              "BeforeValue": "hello",
+              "AfterValue": "world",
+              "AttributeChangeType": "Modify"
+            },
+            "Evaluation": "Static"
+          },
+          {
+            "Target": {
+              "Attribute": "Tags",
+              "RequiresRecreation": "Never",
+              "Path": "/Tags/2/Key",
+              "BeforeValue": "ToRemoveStack",
+              "AfterValue": "ToAddStack",
+              "AttributeChangeType": "Modify"
+            },
+            "Evaluation": "Static"
+          },
+          {
+            "Target": {
+              "Attribute": "Tags",
+              "RequiresRecreation": "Never",
+              "Path": "/Tags/2/Value",
+              "BeforeValue": "bar",
+              "AfterValue": "baz",
+              "AttributeChangeType": "Modify"
+            },
+            "Evaluation": "Static"
+          }
+        ],
+        "BeforeContext": "{\"Properties\":{}}",
+        "AfterContext": "{\"Properties\":{}}"
+      }
+    },
+    {
+      "Type": "Resource",
+      "ResourceChange": {
+        "Action": "Modify",
+        "LogicalResourceId": "Bucket3",
+        "PhysicalResourceId": "stack-tags-bucket3-szpdmqtnjnfm",
+        "ResourceType": "AWS::S3::Bucket",
+        "Replacement": "False",
+        "Scope": ["Tags"],
+        "Details": [
+          {
+            "Target": {
+              "Attribute": "Tags",
+              "RequiresRecreation": "Never",
+              "Path": "/Tags/1/Value",
+              "BeforeValue": "hello",
+              "AfterValue": "world",
+              "AttributeChangeType": "Modify"
+            },
+            "Evaluation": "Static"
+          },
+          {
+            "Target": {
+              "Attribute": "Tags",
+              "RequiresRecreation": "Never",
+              "Path": "/Tags/2/Key",
+              "BeforeValue": "ToRemoveStack",
+              "AfterValue": "ToAddStack",
+              "AttributeChangeType": "Modify"
+            },
+            "Evaluation": "Static"
+          },
+          {
+            "Target": {
+              "Attribute": "Tags",
+              "RequiresRecreation": "Never",
+              "Path": "/Tags/2/Value",
+              "BeforeValue": "bar",
+              "AfterValue": "baz",
+              "AttributeChangeType": "Modify"
+            },
+            "Evaluation": "Static"
+          }
+        ],
+        "BeforeContext": "{\"Properties\":{}}",
+        "AfterContext": "{\"Properties\":{}}"
+      }
+    },
+    {
+      "Type": "Resource",
+      "ResourceChange": {
+        "Action": "Modify",
+        "LogicalResourceId": "Bucket",
+        "PhysicalResourceId": "stack-tags-bucket-gtah7agvq7tg",
+        "ResourceType": "AWS::S3::Bucket",
+        "Replacement": "False",
+        "Scope": ["Tags"],
+        "Details": [
+          {
+            "Target": {
+              "Attribute": "Tags",
+              "RequiresRecreation": "Never",
+              "Path": "/Tags/1/Value",
+              "BeforeValue": "hello",
+              "AfterValue": "world",
+              "AttributeChangeType": "Modify"
+            },
+            "Evaluation": "Static"
+          },
+          {
+            "Target": {
+              "Attribute": "Tags",
+              "RequiresRecreation": "Never",
+              "Path": "/Tags/2/Key",
+              "BeforeValue": "ToRemoveStack",
+              "AfterValue": "ToAddStack",
+              "AttributeChangeType": "Modify"
+            },
+            "Evaluation": "Static"
+          },
+          {
+            "Target": {
+              "Attribute": "Tags",
+              "RequiresRecreation": "Never",
+              "Path": "/Tags/2/Value",
+              "BeforeValue": "bar",
+              "AfterValue": "baz",
+              "AttributeChangeType": "Modify"
+            },
+            "Evaluation": "Static"
+          }
+        ],
+        "BeforeContext": "{\"Properties\":{}}",
+        "AfterContext": "{\"Properties\":{}}"
+      }
+    }
+  ],
+  "ChangeSetName": "e4db3678-4ba8-42c7-8769-b87a2c92836e",
+  "ChangeSetId": "arn:aws:cloudformation:us-east-2:999999999999:changeSet/e4db3678-4ba8-42c7-8769-b87a2c92836e/e1b45283-e9e1-4ebb-b5f5-054b84c61c01",
+  "StackId": "arn:aws:cloudformation:us-east-2:999999999999:stack/stack-tags/0084f560-9430-11f0-9a8a-0a13b6944485",
+  "StackName": "stack-tags",
+  "Description": null,
+  "Parameters": null,
+  "CreationTime": "2025-01-01T01:01:01.001000+00:00",
+  "ExecutionStatus": "AVAILABLE",
+  "Status": "CREATE_COMPLETE",
+  "StatusReason": null,
+  "NotificationARNs": [],
+  "RollbackConfiguration": {},
+  "Capabilities": [],
+  "Tags": [
+    {
+      "Key": "ToUpdateStack",
+      "Value": "world"
+    },
+    {
+      "Key": "ToKeepStack",
+      "Value": "foo"
+    },
+    {
+      "Key": "ToAddStack",
+      "Value": "baz"
+    }
+  ],
+  "ParentChangeSetId": null,
+  "IncludeNestedStacks": false,
+  "RootChangeSetId": null,
+  "OnStackFailure": null,
+  "ImportExistingResources": null
+}

@@ -1,0 +1,35 @@
+{
+  "Changes": [
+    {
+      "Type": "Resource",
+      "ResourceChange": {
+        "Action": "Import",
+        "LogicalResourceId": "Bucket",
+        "PhysicalResourceId": "my-bucket-999999999999-us-east-2",
+        "ResourceType": "AWS::S3::Bucket",
+        "Scope": [],
+        "Details": [],
+        "AfterContext": "{\"Properties\":{\"Tags\":[{\"Value\":\"Production\",\"Key\":\"Environment\"},{\"Value\":\"ImportExample\",\"Key\":\"Project\"}],\"BucketName\":\"my-bucket-999999999999-us-east-2\"},\"UpdateReplacePolicy\":\"Retain\",\"DeletionPolicy\":\"Retain\"}"
+      }
+    }
+  ],
+  "ChangeSetName": "test13cfde17-8223-4a29-bf75-ca09efe1d6f6",
+  "ChangeSetId": "arn:aws:cloudformation:us-east-2:999999999999:changeSet/test13cfde17-8223-4a29-bf75-ca09efe1d6f6/eff89771-f6ae-410a-8e28-b03198da9761",
+  "StackId": "arn:aws:cloudformation:us-east-2:999999999999:stack/import/c6c57270-974d-11f0-8056-0a6ee0c5c559",
+  "StackName": "import",
+  "Description": null,
+  "Parameters": null,
+  "CreationTime": "2025-01-01T01:01:01.001000+00:00",
+  "ExecutionStatus": "AVAILABLE",
+  "Status": "CREATE_COMPLETE",
+  "StatusReason": null,
+  "NotificationARNs": [],
+  "RollbackConfiguration": {},
+  "Capabilities": [],
+  "Tags": null,
+  "ParentChangeSetId": null,
+  "IncludeNestedStacks": true,
+  "RootChangeSetId": null,
+  "OnStackFailure": null,
+  "ImportExistingResources": true
+}

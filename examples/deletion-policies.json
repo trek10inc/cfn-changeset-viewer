@@ -1,0 +1,102 @@
+{
+  "Changes": [
+    {
+      "Type": "Resource",
+      "ResourceChange": {
+        "Action": "Modify",
+        "LogicalResourceId": "BucketToRemoveDeletionPolices",
+        "PhysicalResourceId": "deletion-policies-buckettoremovedeletionpolices-pryezks5mkhd",
+        "ResourceType": "AWS::S3::Bucket",
+        "Replacement": "False",
+        "Scope": ["DeletionPolicy", "UpdateReplacePolicy"],
+        "Details": [
+          {
+            "Target": {
+              "Attribute": "UpdateReplacePolicy",
+              "RequiresRecreation": "Never",
+              "Path": "/UpdateReplacePolicy",
+              "BeforeValue": "Retain",
+              "AttributeChangeType": "Remove"
+            },
+            "Evaluation": "Static",
+            "ChangeSource": "DirectModification"
+          },
+          {
+            "Target": {
+              "Attribute": "DeletionPolicy",
+              "RequiresRecreation": "Never",
+              "Path": "/DeletionPolicy",
+              "BeforeValue": "Retain",
+              "AttributeChangeType": "Remove"
+            },
+            "Evaluation": "Static",
+            "ChangeSource": "DirectModification"
+          }
+        ],
+        "BeforeContext": "{\"Properties\":{},\"UpdateReplacePolicy\":\"Retain\",\"DeletionPolicy\":\"Retain\"}",
+        "AfterContext": "{\"Properties\":{}}"
+      }
+    },
+    {
+      "Type": "Resource",
+      "ResourceChange": {
+        "PolicyAction": "Retain",
+        "Action": "Remove",
+        "LogicalResourceId": "BucketToRemove",
+        "PhysicalResourceId": "deletion-policies-buckettoremove-sujxxnsjkpui",
+        "ResourceType": "AWS::S3::Bucket",
+        "Scope": [],
+        "Details": [],
+        "BeforeContext": "{\"Properties\":{},\"UpdateReplacePolicy\":\"Retain\",\"DeletionPolicy\":\"Retain\"}"
+      }
+    },
+    {
+      "Type": "Resource",
+      "ResourceChange": {
+        "PolicyAction": "ReplaceAndRetain",
+        "Action": "Modify",
+        "LogicalResourceId": "BucketToReplace",
+        "PhysicalResourceId": "deletion-policies-999999999999-us-east-2-bucket",
+        "ResourceType": "AWS::S3::Bucket",
+        "Replacement": "True",
+        "Scope": ["Properties"],
+        "Details": [
+          {
+            "Target": {
+              "Attribute": "Properties",
+              "Name": "BucketName",
+              "RequiresRecreation": "Always",
+              "Path": "/Properties/BucketName",
+              "BeforeValue": "deletion-policies-999999999999-us-east-2-bucket",
+              "AfterValue": "deletion-policies-999999999999-us-east-2-bucket2",
+              "AttributeChangeType": "Modify"
+            },
+            "Evaluation": "Static",
+            "ChangeSource": "DirectModification"
+          }
+        ],
+        "BeforeContext": "{\"Properties\":{\"BucketName\":\"deletion-policies-999999999999-us-east-2-bucket\"},\"UpdateReplacePolicy\":\"Retain\",\"DeletionPolicy\":\"Retain\"}",
+        "AfterContext": "{\"Properties\":{\"BucketName\":\"deletion-policies-999999999999-us-east-2-bucket2\"},\"UpdateReplacePolicy\":\"Retain\",\"DeletionPolicy\":\"Retain\"}"
+      }
+    }
+  ],
+  "ChangeSetName": "testa24f1e8e-91b8-4f60-a6d2-09f28cf7d38a",
+  "ChangeSetId": "arn:aws:cloudformation:us-east-2:999999999999:changeSet/testa24f1e8e-91b8-4f60-a6d2-09f28cf7d38a/090545b2-eb62-4a6a-b83e-76b4edc5edb6",
+  "StackId": "arn:aws:cloudformation:us-east-2:999999999999:stack/deletion-policies/76f0e910-9436-11f0-8f6a-0abcea595583",
+  "StackName": "deletion-policies",
+  "Description": null,
+  "Parameters": null,
+  "CreationTime": "2025-01-01T01:01:01.001000+00:00",
+  "ExecutionStatus": "AVAILABLE",
+  "Status": "CREATE_COMPLETE",
+  "StatusReason": null,
+  "NotificationARNs": [],
+  "RollbackConfiguration": {},
+  "Capabilities": [],
+  "Tags": null,
+  "ParentChangeSetId": null,
+  "IncludeNestedStacks": false,
+  "RootChangeSetId": null,
+  "OnStackFailure": null,
+  "ImportExistingResources": null
+}

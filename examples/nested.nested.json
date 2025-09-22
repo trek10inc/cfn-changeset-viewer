@@ -1,0 +1,154 @@
+{
+  "Changes": [
+    {
+      "Type": "Resource",
+      "ResourceChange": {
+        "Action": "Add",
+        "LogicalResourceId": "BucketToAdd",
+        "ResourceType": "AWS::S3::Bucket",
+        "Scope": [],
+        "Details": [],
+        "AfterContext": "{\"Properties\":{}}"
+      }
+    },
+    {
+      "Type": "Resource",
+      "ResourceChange": {
+        "PolicyAction": "Delete",
+        "Action": "Remove",
+        "LogicalResourceId": "BucketToRemove",
+        "PhysicalResourceId": "nested-stack-1np3wq7zb2zt2-buckettoremove-gourzvrizvxv",
+        "ResourceType": "AWS::S3::Bucket",
+        "Scope": [],
+        "Details": [],
+        "BeforeContext": "{\"Properties\":{}}"
+      }
+    },
+    {
+      "Type": "Resource",
+      "ResourceChange": {
+        "PolicyAction": "ReplaceAndDelete",
+        "Action": "Modify",
+        "LogicalResourceId": "BucketToReplace",
+        "PhysicalResourceId": "cfn-changeset-viewer-999999999999-us-east-2-bucket",
+        "ResourceType": "AWS::S3::Bucket",
+        "Replacement": "True",
+        "Scope": ["Properties"],
+        "Details": [
+          {
+            "Target": {
+              "Attribute": "Properties",
+              "Name": "BucketName",
+              "RequiresRecreation": "Always",
+              "Path": "/Properties/BucketName",
+              "BeforeValue": "cfn-changeset-viewer-999999999999-us-east-2-bucket",
+              "AfterValue": "cfn-changeset-viewer-999999999999-us-east-2-bucket2",
+              "AttributeChangeType": "Modify"
+            },
+            "Evaluation": "Static",
+            "ChangeSource": "DirectModification"
+          }
+        ],
+        "BeforeContext": "{\"Properties\":{\"BucketName\":\"cfn-changeset-viewer-999999999999-us-east-2-bucket\"}}",
+        "AfterContext": "{\"Properties\":{\"BucketName\":\"cfn-changeset-viewer-999999999999-us-east-2-bucket2\"}}"
+      }
+    },
+    {
+      "Type": "Resource",
+      "ResourceChange": {
+        "Action": "Modify",
+        "LogicalResourceId": "BucketToUpdate",
+        "PhysicalResourceId": "nested-stack-1np3wq7zb2zt2-buckettoupdate-zepgoy8rj3qx",
+        "ResourceType": "AWS::S3::Bucket",
+        "Replacement": "False",
+        "Scope": ["Properties"],
+        "Details": [
+          {
+            "Target": {
+              "Attribute": "Properties",
+              "Name": "VersioningConfiguration",
+              "RequiresRecreation": "Never",
+              "Path": "/Properties/VersioningConfiguration",
+              "AfterValue": "{\"Status\":\"Enabled\"}",
+              "AttributeChangeType": "Add"
+            },
+            "Evaluation": "Static",
+            "ChangeSource": "DirectModification"
+          }
+        ],
+        "BeforeContext": "{\"Properties\":{}}",
+        "AfterContext": "{\"Properties\":{\"VersioningConfiguration\":{\"Status\":\"Enabled\"}}}"
+      }
+    },
+    {
+      "Type": "Resource",
+      "ResourceChange": {
+        "Action": "Modify",
+        "LogicalResourceId": "BucketWithTags",
+        "PhysicalResourceId": "nested-stack-1np3wq7zb2zt2-bucketwithtags-pvwmxsq4v1zs",
+        "ResourceType": "AWS::S3::Bucket",
+        "Replacement": "False",
+        "Scope": ["Tags"],
+        "Details": [
+          {
+            "Target": {
+              "Attribute": "Tags",
+              "RequiresRecreation": "Never",
+              "Path": "/Properties/Tags/1/Key",
+              "BeforeValue": "ToRemove",
+              "AfterValue": "ToAdd",
+              "AttributeChangeType": "Modify"
+            },
+            "Evaluation": "Static",
+            "ChangeSource": "DirectModification"
+          },
+          {
+            "Target": {
+              "Attribute": "Tags",
+              "RequiresRecreation": "Never",
+              "Path": "/Properties/Tags/1/Value",
+              "BeforeValue": "Bar",
+              "AfterValue": "Baz",
+              "AttributeChangeType": "Modify"
+            },
+            "Evaluation": "Static",
+            "ChangeSource": "DirectModification"
+          },
+          {
+            "Target": {
+              "Attribute": "Tags",
+              "RequiresRecreation": "Never",
+              "Path": "/Properties/Tags/2/Value",
+              "BeforeValue": "Hello",
+              "AfterValue": "World",
+              "AttributeChangeType": "Modify"
+            },
+            "Evaluation": "Static",
+            "ChangeSource": "DirectModification"
+          }
+        ],
+        "BeforeContext": "{\"Properties\":{\"Tags\":[{\"Value\":\"Foo\",\"Key\":\"ToKeep\"},{\"Value\":\"Bar\",\"Key\":\"ToRemove\"},{\"Value\":\"Hello\",\"Key\":\"ToUpdate\"}]}}",
+        "AfterContext": "{\"Properties\":{\"Tags\":[{\"Value\":\"Foo\",\"Key\":\"ToKeep\"},{\"Value\":\"Baz\",\"Key\":\"ToAdd\"},{\"Value\":\"World\",\"Key\":\"ToUpdate\"}]}}"
+      }
+    }
+  ],
+  "ChangeSetName": "testc4f86796-eb9c-41a5-8e1a-bc3417c58b35-Stack-KGNOPQQYR087",
+  "ChangeSetId": "arn:aws:cloudformation:us-east-2:999999999999:changeSet/testc4f86796-eb9c-41a5-8e1a-bc3417c58b35-Stack-KGNOPQQYR087/ff0dfd97-17fe-4da9-a561-86d6efe94b43",
+  "StackId": "arn:aws:cloudformation:us-east-2:999999999999:stack/nested-Stack-1NP3WQ7ZB2ZT2/453a7b80-943a-11f0-91a7-0a1457c53e07",
+  "StackName": "nested-Stack-1NP3WQ7ZB2ZT2",
+  "Description": null,
+  "Parameters": null,
+  "CreationTime": "2025-01-01T01:01:01.001000+00:00",
+  "ExecutionStatus": "UNAVAILABLE",
+  "Status": "CREATE_COMPLETE",
+  "StatusReason": "Only executable from the root change set.",
+  "NotificationARNs": [],
+  "RollbackConfiguration": {},
+  "Capabilities": [],
+  "Tags": null,
+  "ParentChangeSetId": "arn:aws:cloudformation:us-east-2:999999999999:changeSet/testc4f86796-eb9c-41a5-8e1a-bc3417c58b35/c4cceb1c-0cf4-4cba-9b39-cbd14d47feca",
+  "IncludeNestedStacks": true,
+  "RootChangeSetId": "arn:aws:cloudformation:us-east-2:999999999999:changeSet/testc4f86796-eb9c-41a5-8e1a-bc3417c58b35/c4cceb1c-0cf4-4cba-9b39-cbd14d47feca",
+  "OnStackFailure": null,
+  "ImportExistingResources": null
+}

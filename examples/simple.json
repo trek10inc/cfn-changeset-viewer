@@ -1,0 +1,34 @@
+{
+  "Changes": [
+    {
+      "Type": "Resource",
+      "ResourceChange": {
+        "Action": "Add",
+        "LogicalResourceId": "OtherBucket",
+        "ResourceType": "AWS::S3::Bucket",
+        "Scope": [],
+        "Details": [],
+        "AfterContext": "{\"Properties\":{}}"
+      }
+    }
+  ],
+  "ChangeSetName": "C997419C-A57D-43B5-9D85-F699F277A3E6",
+  "ChangeSetId": "arn:aws:cloudformation:us-east-2:999999999999:changeSet/C997419C-A57D-43B5-9D85-F699F277A3E6/1126e64b-a368-4f3a-9ef4-82fe9e3e0a07",
+  "StackId": "arn:aws:cloudformation:us-east-2:999999999999:stack/simple/87010cf0-9421-11f0-b86d-0af13c1b998b",
+  "StackName": "simple",
+  "Description": null,
+  "Parameters": null,
+  "CreationTime": "2025-01-01T01:01:01.001000+00:00",
+  "ExecutionStatus": "AVAILABLE",
+  "Status": "CREATE_COMPLETE",
+  "StatusReason": null,
+  "NotificationARNs": [],
+  "RollbackConfiguration": {},
+  "Capabilities": [],
+  "Tags": null,
+  "ParentChangeSetId": null,
+  "IncludeNestedStacks": false,
+  "RootChangeSetId": null,
+  "OnStackFailure": null,
+  "ImportExistingResources": null
+}
