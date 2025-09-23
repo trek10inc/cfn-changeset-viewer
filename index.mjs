@@ -224,6 +224,10 @@ export async function main() {
       description: "The AWS region where the change-set is located",
       type: "string",
     })
+    .option("debug", {
+      description: "Enable debug logging",
+      type: "boolean",
+    })
     .help().argv;
 
   const cfnprops = {};
@@ -285,6 +289,9 @@ export async function main() {
     console.log(`${totals.Dynamic} undetermined resources`);
   } catch (err) {
     console.log(`Error printing ChangeSet: ${err}`);
+    if (args.debug) {
+      throw err;
+    }
     process.exit(1);
   }
 }
