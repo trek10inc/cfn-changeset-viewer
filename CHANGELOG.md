@@ -1,5 +1,12 @@
 # cfn-changeset-viewer
 
+## 0.3.2
+
+### Patch Changes
+
+- fix(viewer): dont override action for resource replacement
+- feat(cli): add debug flag
+
 ## 0.3.1
 
 ### Patch Changes
