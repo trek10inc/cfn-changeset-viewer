@@ -109,14 +109,10 @@ function logChange(resourceChange, options = {}) {
     before,
     after,
     {
-      action:
-        resourceChange.Replacement === "True" ? "Remove" : resourceChange.Action === "Import" ? "Import" : undefined,
+      action: resourceChange.Action === "Import" ? "Import" : undefined,
       showUnchangedProperties: options.showUnchangedProperties ?? false,
     },
     replacementNotes,
-    // {
-    //   "BucketToReplace/Properties/BucketName": "hello!",
-    // },
   );
 }
 
