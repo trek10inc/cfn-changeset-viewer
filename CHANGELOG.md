@@ -1,5 +1,13 @@
 # cfn-changeset-viewer
 
+## 0.3.0
+
+### Minor Changes
+
+- rewrite diff logging functionality into two phases, diff builder and diff logger
+- add --no-color CLI option to disable color output
+- add tests
+
 ## 0.2.1
 
 ### Patch Changes
