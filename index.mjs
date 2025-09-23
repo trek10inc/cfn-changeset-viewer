@@ -253,7 +253,19 @@ export async function main() {
       }
       changeSetId = latestChangeSet?.ChangeSetId;
     } else {
-      changeSetId = args.changeSetName;
+      if (args.stackName) {
+        // get the change set id
+        const changeset = await cfn.send(
+          new DescribeChangeSetCommand({
+            StackName: args.stackName,
+            ChangeSetName: args.changeSetName,
+          }),
+        );
+        if (!changeset.ChangeSetId) throw new Error("Change set not found");
+        changeSetId = changeset.ChangeSetId;
+      } else {
+        changeSetId = args.changeSetName;
+      }
     }
 
     const totals = await printChangeSet(

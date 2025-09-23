@@ -1,5 +1,11 @@
 # cfn-changeset-viewer
 
+## 0.3.1
+
+### Patch Changes
+
+- fix(cli): handle change-set-name and stack-name arguments
+
 ## 0.3.0
 
 ### Minor Changes
