@@ -1,5 +1,15 @@
 # cfn-changeset-viewer
 
+## 0.3.3
+
+### Patch Changes
+
+- fix(diff): refactor diff module, return strings, handle edge cases
+- feat(diff): match array elements based on most-similar property keys
+- fix(cli): handle change-set-name and stack-name arguments
+- fix(viewer): dont override action for resource replacement
+- feat(cli): add debug flag
+
 ## 0.3.2
 
 ### Patch Changes
