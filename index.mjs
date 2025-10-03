@@ -1,10 +1,16 @@
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { CloudFormation, DescribeChangeSetCommand, paginateListChangeSets } from "@aws-sdk/client-cloudformation";
+import {
+  CloudFormation,
+  DescribeChangeSetCommand,
+  PolicyAction,
+  paginateListChangeSets,
+} from "@aws-sdk/client-cloudformation";
+import chalk from "chalk";
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
-import { logObjectDiff } from "./lib/diff.mjs";
+import { getObjectDiff } from "./lib/diff.mjs";
 
 /**
  * @template T
@@ -46,10 +52,21 @@ function sortObject(obj, keys) {
   return Object.assign(result, obj);
 }
 
+/** @type {Record<PolicyAction, chalk.Chalk>} */
+const PolicyActionMap = {
+  Delete: chalk.redBright,
+  Retain: chalk.yellowBright,
+  ReplaceAndDelete: chalk.redBright,
+  ReplaceAndRetain: chalk.yellowBright,
+  ReplaceAndSnapshot: chalk.greenBright,
+  Snapshot: chalk.greenBright,
+};
+
 /**
  * @param {import('@aws-sdk/client-cloudformation').ResourceChange} resourceChange
  * @param {object} [options]
  * @param {boolean} [options.showUnchangedProperties]
+ * @param {boolean} [options.showColor]
  */
 function logChange(resourceChange, options = {}) {
   /** @type {*} */
@@ -58,6 +75,16 @@ function logChange(resourceChange, options = {}) {
   const afterStackTags = {};
   /** @type {Record<string, string>} */
   const replacementNotes = {};
+
+  if (resourceChange.PolicyAction) {
+    if (options.showColor) {
+      replacementNotes[resourceChange.LogicalResourceId ?? ""] = PolicyActionMap[resourceChange.PolicyAction](
+        `Policy: ${resourceChange.PolicyAction}`,
+      );
+    } else {
+      replacementNotes[resourceChange.LogicalResourceId ?? ""] = `Policy: ${resourceChange.PolicyAction}`;
+    }
+  }
 
   for (const detail of resourceChange.Details ?? []) {
     if (!detail.Target) continue;
@@ -68,10 +95,9 @@ function logChange(resourceChange, options = {}) {
     }
     if (detail.Target.RequiresRecreation === "Always") {
       replacementNotes[join(resourceChange.LogicalResourceId ?? "", detail.Target.Path)] =
-        `WARNING: Requires Replacement! Policy: ${resourceChange.PolicyAction}`;
+        `WARNING: Causes Replacement!`;
     } else if (detail.Target.RequiresRecreation === "Conditionally") {
-      replacementNotes[join(resourceChange.LogicalResourceId ?? "", detail.Target.Path)] =
-        `May require replacement! Policy: ${resourceChange.PolicyAction}`;
+      replacementNotes[join(resourceChange.LogicalResourceId ?? "", detail.Target.Path)] = `May cause replacement!`;
     }
   }
 
@@ -105,15 +131,21 @@ function logChange(resourceChange, options = {}) {
   if (Object.keys(afterStackTags).length > 0) {
     after[resourceChange.LogicalResourceId ?? ""].StackTags = Object.values(afterStackTags.Tags);
   }
-  logObjectDiff(
+  const diffStrings = getObjectDiff(
     before,
     after,
     {
-      action: resourceChange.Action === "Import" ? "Import" : undefined,
       showUnchangedProperties: options.showUnchangedProperties ?? false,
+      showColor: options.showColor ?? true,
+      colorOverride: resourceChange.Action === "Import" ? chalk.cyan : undefined,
+      iconOverride: resourceChange.Action === "Import" ? "↓" : undefined,
     },
     replacementNotes,
   );
+  if (diffStrings.length > 0) {
+    console.log(diffStrings.join("\n"));
+    console.log("");
+  }
 }
 
 /**
@@ -207,10 +239,10 @@ export async function main() {
       description: "The name of the stack, only required if the change set ARN is not specified",
       type: "string",
     })
-    .option("no-color", {
-      description: "Disable color output",
+    .option("show-color", {
+      description: "Show color output",
       type: "boolean",
-      default: false,
+      default: true,
     })
     .option("show-unchanged-properties", {
       description: "Show unchanged properties in the diff",
@@ -273,7 +305,7 @@ export async function main() {
       changeSetId,
       {
         showUnchangedProperties: args.showUnchangedProperties,
-        showColor: !args.noColor,
+        showColor: args.showColor,
       },
       "",
     );
