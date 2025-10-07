@@ -1,5 +1,11 @@
 # cfn-changeset-viewer
 
+## 0.3.4
+
+### Patch Changes
+
+- feat(tags): handle JSON parsing errors for tag values
+
 ## 0.3.3
 
 ### Patch Changes

@@ -90,8 +90,24 @@ function logChange(resourceChange, options = {}) {
     if (!detail.Target) continue;
     if (!detail.Target.Path) continue;
     if (detail.Target.Attribute === "Tags" && detail.Target.Path?.startsWith("/Tags")) {
-      set(beforeStackTags, detail.Target.Path, detail.Target.BeforeValue);
-      set(afterStackTags, detail.Target.Path, detail.Target.AfterValue);
+      if (detail.Target.BeforeValue) {
+        try {
+          set(beforeStackTags, detail.Target.Path, JSON.parse(detail.Target.BeforeValue));
+        } catch (err) {
+          if (err instanceof SyntaxError) {
+            set(beforeStackTags, detail.Target.Path, detail.Target.BeforeValue);
+          }
+        }
+      }
+      if (detail.Target.AfterValue) {
+        try {
+          set(afterStackTags, detail.Target.Path, JSON.parse(detail.Target.AfterValue));
+        } catch (err) {
+          if (err instanceof SyntaxError) {
+            set(afterStackTags, detail.Target.Path, detail.Target.AfterValue);
+          }
+        }
+      }
     }
     if (detail.Target.RequiresRecreation === "Always") {
       replacementNotes[join(resourceChange.LogicalResourceId ?? "", detail.Target.Path)] =
@@ -126,6 +142,7 @@ function logChange(resourceChange, options = {}) {
     );
   }
   if (Object.keys(beforeStackTags).length > 0) {
+    console.log(beforeStackTags);
     before[resourceChange.LogicalResourceId ?? ""].StackTags = Object.values(beforeStackTags.Tags);
   }
   if (Object.keys(afterStackTags).length > 0) {

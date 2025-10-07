@@ -1,0 +1,65 @@
+{
+  "Changes": [
+    {
+      "Type": "Resource",
+      "ResourceChange": {
+        "Action": "Modify",
+        "LogicalResourceId": "FooPermissionSet",
+        "PhysicalResourceId": "arn:aws:sso:::instance/ssoins-abc123|arn:aws:sso:::permissionSet/ssoins-abc123/ps-def456",
+        "ResourceType": "AWS::SSO::PermissionSet",
+        "Replacement": "False",
+        "Scope": ["Properties", "Tags"],
+        "Details": [
+          {
+            "Target": {
+              "Attribute": "Tags",
+              "RequiresRecreation": "Never",
+              "Path": "/Tags",
+              "AfterValue": "[{\"Key\":\"environment\",\"Value\":\"production\"}]",
+              "AttributeChangeType": "Add"
+            },
+            "Evaluation": "Static"
+          },
+          {
+            "Target": {
+              "Attribute": "Properties",
+              "Name": "ManagedPolicies",
+              "RequiresRecreation": "Never",
+              "Path": "/Properties/ManagedPolicies/0",
+              "AfterValue": "arn:aws:iam::aws:policy/AWSManagementConsoleBasicUserAccess",
+              "AttributeChangeType": "Add"
+            },
+            "Evaluation": "Static",
+            "ChangeSource": "DirectModification"
+          }
+        ],
+        "BeforeContext": "{\"Properties\":{\"CustomerManagedPolicyReferences\":[{\"Path\":\"/\",\"Name\":\"FooPolicy\"}],\"SessionDuration\":\"PT8H\",\"Description\":\"Foo\",\"InstanceArn\":\"arn:aws:sso:::instance/ssoins-abc123\",\"InlinePolicy\":\"(Truncated-Signature):aa930416f59b4ea481a86eec63022847e1aabaaf24cd43c2a9ee15f145814c98\",\"ManagedPolicies\":[],\"Name\":\"Foo\"},\"DeletionPolicy\":\"Retain\"}",
+        "AfterContext": "{\"Properties\":{\"CustomerManagedPolicyReferences\":[{\"Path\":\"/\",\"Name\":\"FooPolicy\"}],\"SessionDuration\":\"PT8H\",\"Description\":\"Foo\",\"InstanceArn\":\"arn:aws:sso:::instance/ssoins-abc123\",\"InlinePolicy\":\"(Truncated-Signature):aa930416f59b4ea481a86eec63022847e1aabaaf24cd43c2a9ee15f145814c98\",\"ManagedPolicies\":[\"arn:aws:iam::aws:policy/AWSManagementConsoleBasicUserAccess\"],\"Name\":\"Foo\"},\"DeletionPolicy\":\"Retain\"}"
+      }
+    }
+  ],
+  "ChangeSetName": "foo",
+  "ChangeSetId": "arn:aws:cloudformation:us-east-1:123123123123:changeSet/foo/465e6c13-0074-4c56-b056-8ab746f48c73",
+  "StackId": "arn:aws:cloudformation:us-east-1:123123123123:stack/identitycenter-permissionset-Foo/465e6c13-0074-4c56-b056-8ab746f48c73",
+  "StackName": "foo",
+  "Description": null,
+  "Parameters": null,
+  "CreationTime": "2025-10-07T15:33:41.509000+00:00",
+  "ExecutionStatus": "AVAILABLE",
+  "Status": "CREATE_COMPLETE",
+  "StatusReason": null,
+  "NotificationARNs": [],
+  "RollbackConfiguration": {},
+  "Capabilities": ["CAPABILITY_NAMED_IAM", "CAPABILITY_AUTO_EXPAND"],
+  "Tags": [
+    {
+      "Key": "environment",
+      "Value": "production"
+    }
+  ],
+  "ParentChangeSetId": null,
+  "IncludeNestedStacks": true,
+  "RootChangeSetId": null,
+  "OnStackFailure": null,
+  "ImportExistingResources": true
+}
