@@ -1,5 +1,6 @@
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
+import querystring from "node:querystring";
 import { fileURLToPath } from "node:url";
 import {
   CloudFormation,
@@ -172,8 +173,17 @@ function logChange(resourceChange, options = {}) {
 async function getChangeSetChanges(cfn, changeSetId) {
   if (changeSetId.startsWith("file://")) {
     const contents = readFileSync(changeSetId.replace("file://", ""), "utf-8");
-    const changeSet = JSON.parse(contents);
-    return /** @type {Array<import("@aws-sdk/client-cloudformation").Change>} */ (changeSet.Changes ?? []);
+    const response = /** @type {import("@aws-sdk/client-cloudformation").DescribeChangeSetOutput} */ (
+      JSON.parse(contents)
+    );
+    if (!response.ChangeSetId || !response.StackId) {
+      throw new Error("Change set file must contain ChangeSetId and StackId");
+    }
+    return {
+      changeSetId: response.ChangeSetId,
+      stackId: response.StackId,
+      changes: response.Changes ?? [],
+    };
   }
   let response;
   let attempts = 0;
@@ -193,7 +203,14 @@ async function getChangeSetChanges(cfn, changeSetId) {
       await new Promise((resolve) => setTimeout(resolve, 2 ** attempts * 1000 + Math.random() * 1000));
     }
   }
-  return response.Changes ?? [];
+  if (!response.ChangeSetId || !response.StackId) {
+    throw new Error("Change set file must contain ChangeSetId and StackId");
+  }
+  return {
+    changeSetId: response.ChangeSetId,
+    stackId: response.StackId,
+    changes: response.Changes ?? [],
+  };
 }
 
 /**
@@ -205,7 +222,7 @@ async function getChangeSetChanges(cfn, changeSetId) {
  * @param {string} [path]
  */
 async function printChangeSet(cfn, changeSetId, options = undefined, path = "") {
-  const changes = await getChangeSetChanges(cfn, changeSetId);
+  const response = await getChangeSetChanges(cfn, changeSetId);
 
   const totals = {
     Add: 0,
@@ -215,7 +232,7 @@ async function printChangeSet(cfn, changeSetId, options = undefined, path = "") 
     Dynamic: 0,
   };
 
-  for (const change of changes) {
+  for (const change of response.changes) {
     const resourceChange = change.ResourceChange;
     if (!resourceChange) continue;
     if (resourceChange.Action === "Modify" && resourceChange.Replacement !== "False") {
@@ -235,7 +252,7 @@ async function printChangeSet(cfn, changeSetId, options = undefined, path = "") 
       options,
     );
     if (resourceChange.ChangeSetId) {
-      const nestedTotals = await printChangeSet(cfn, resourceChange.ChangeSetId, options, `${logicalId}/`);
+      const { totals: nestedTotals } = await printChangeSet(cfn, resourceChange.ChangeSetId, options, `${logicalId}/`);
       totals.Add += nestedTotals.Add;
       totals.Modify += nestedTotals.Modify;
       totals.Remove += nestedTotals.Remove;
@@ -243,7 +260,11 @@ async function printChangeSet(cfn, changeSetId, options = undefined, path = "") 
       totals.Dynamic += nestedTotals.Dynamic;
     }
   }
-  return totals;
+  return {
+    changeSetId: response.changeSetId,
+    stackId: response.stackId,
+    totals,
+  };
 }
 
 export async function main() {
@@ -317,7 +338,7 @@ export async function main() {
       }
     }
 
-    const totals = await printChangeSet(
+    const response = await printChangeSet(
       cfn,
       changeSetId,
       {
@@ -327,11 +348,19 @@ export async function main() {
       "",
     );
     console.log("===== Results =====");
-    console.log(`${totals.Add} resources added`);
-    console.log(`${totals.Modify} resources modified`);
-    console.log(`${totals.Remove} resources removed`);
-    console.log(`${totals.Import} resources imported`);
-    console.log(`${totals.Dynamic} undetermined resources`);
+    console.log(`${response.totals.Add} resources added`);
+    console.log(`${response.totals.Modify} resources modified`);
+    console.log(`${response.totals.Remove} resources removed`);
+    console.log(`${response.totals.Import} resources imported`);
+    console.log(`${response.totals.Dynamic} undetermined resources`);
+    console.log();
+    const region = response.stackId.split(":")[3];
+    const qs = querystring.stringify({
+      stackId: response.stackId,
+      changeSetId: response.changeSetId,
+      region,
+    });
+    console.log(`https://${region}.console.aws.amazon.com/cloudformation/home?${qs}#/stacks/changesets/changes?${qs}`);
   } catch (err) {
     console.log(`Error printing ChangeSet: ${err}`);
     if (args.debug) {
