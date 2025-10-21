@@ -1,6 +1,12 @@
 # cfn-changeset-viewer
 
-## 0.3.4
+## 0.3.6
+
+### Patch Changes
+
+- feat(cicd): use oidc trusted access for publishing
+
+## 0.3.5
 
 ### Patch Changes
 
