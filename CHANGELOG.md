@@ -1,5 +1,11 @@
 # cfn-changeset-viewer
 
+## 0.3.7
+
+### Patch Changes
+
+- fix(cli): remove unnecessary debug logs
+
 ## 0.3.6
 
 ### Patch Changes

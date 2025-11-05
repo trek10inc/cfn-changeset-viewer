@@ -143,7 +143,6 @@ function logChange(resourceChange, options = {}) {
     );
   }
   if (Object.keys(beforeStackTags).length > 0) {
-    console.log(beforeStackTags);
     before[resourceChange.LogicalResourceId ?? ""].StackTags = Object.values(beforeStackTags.Tags);
   }
   if (Object.keys(afterStackTags).length > 0) {
