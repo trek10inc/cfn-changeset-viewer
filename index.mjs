@@ -12,6 +12,7 @@ import chalk from "chalk";
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
 import { getObjectDiff } from "./lib/diff.mjs";
+import { getVisibleStackTags, stripHiddenPropertyTags } from "./lib/tags.mjs";
 
 /**
  * @template T
@@ -68,8 +69,10 @@ const PolicyActionMap = {
  * @param {object} [options]
  * @param {boolean} [options.showUnchangedProperties]
  * @param {boolean} [options.showColor]
+ * @param {string[]} [options.hideTags]
+ * @param {import('@aws-sdk/client-cloudformation').Tag[]} [stackTags] change set tags, for recovering hidden keys
  */
-function logChange(resourceChange, options = {}) {
+function logChange(resourceChange, options = {}, stackTags = []) {
   /** @type {*} */
   const beforeStackTags = {};
   /** @type {*} */
@@ -142,11 +145,22 @@ function logChange(resourceChange, options = {}) {
       ["Type", "DeletionPolicy", "UpdateReplacePolicy", "Properties", "StackTags"],
     );
   }
-  if (Object.keys(beforeStackTags).length > 0) {
-    before[resourceChange.LogicalResourceId ?? ""].StackTags = Object.values(beforeStackTags.Tags);
+  const { before: beforeTagValues, after: afterTagValues } = getVisibleStackTags(
+    beforeStackTags.Tags,
+    afterStackTags.Tags,
+    options.hideTags ?? [],
+    stackTags,
+  );
+  if (beforeTagValues.length > 0) {
+    before[resourceChange.LogicalResourceId ?? ""].StackTags = beforeTagValues;
   }
-  if (Object.keys(afterStackTags).length > 0) {
-    after[resourceChange.LogicalResourceId ?? ""].StackTags = Object.values(afterStackTags.Tags);
+  if (afterTagValues.length > 0) {
+    after[resourceChange.LogicalResourceId ?? ""].StackTags = afterTagValues;
+  }
+  if (options.hideTags && options.hideTags.length > 0) {
+    const hideTagNames = new Set(options.hideTags);
+    stripHiddenPropertyTags(before, hideTagNames);
+    stripHiddenPropertyTags(after, hideTagNames);
   }
   const diffStrings = getObjectDiff(
     before,
@@ -182,6 +196,7 @@ async function getChangeSetChanges(cfn, changeSetId) {
       changeSetId: response.ChangeSetId,
       stackId: response.StackId,
       changes: response.Changes ?? [],
+      tags: response.Tags ?? [],
     };
   }
   let response;
@@ -209,6 +224,7 @@ async function getChangeSetChanges(cfn, changeSetId) {
     changeSetId: response.ChangeSetId,
     stackId: response.StackId,
     changes: response.Changes ?? [],
+    tags: response.Tags ?? [],
   };
 }
 
@@ -218,6 +234,7 @@ async function getChangeSetChanges(cfn, changeSetId) {
  * @param {object} [options]
  * @param {boolean} [options.showUnchangedProperties]
  * @param {boolean} [options.showColor]
+ * @param {string[]} [options.hideTags]
  * @param {string} [path]
  */
 async function printChangeSet(cfn, changeSetId, options = undefined, path = "") {
@@ -249,6 +266,7 @@ async function printChangeSet(cfn, changeSetId, options = undefined, path = "") 
         LogicalResourceId: logicalId,
       },
       options,
+      response.tags,
     );
     if (resourceChange.ChangeSetId) {
       const { totals: nestedTotals } = await printChangeSet(cfn, resourceChange.ChangeSetId, options, `${logicalId}/`);
@@ -284,6 +302,12 @@ export async function main() {
     .option("show-unchanged-properties", {
       description: "Show unchanged properties in the diff",
       type: "boolean",
+    })
+    .option("hide-tag", {
+      description: "Hide changes to the named tag (stack or resource) from the output (repeatable)",
+      type: "array",
+      string: true,
+      default: [],
     })
     .option("region", {
       description: "The AWS region where the change-set is located",
@@ -343,6 +367,7 @@ export async function main() {
       {
         showUnchangedProperties: args.showUnchangedProperties,
         showColor: args.showColor,
+        hideTags: args.hideTag,
       },
       "",
     );

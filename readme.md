@@ -12,6 +12,7 @@ Options:
   --stack-name                 The name of the stack, only required if the change set ARN is not specified [string]
   --no-color                   Disable color output [boolean] [default: false]
   --show-unchanged-properties  Show unchanged properties in the diff [boolean]
+  --hide-tag                   Hide changes to the named tag from the output (repeatable) [array]
   --region                     The AWS region where the change-set is located [string]
   --help                       Show help [boolean]
 ```
@@ -23,6 +24,8 @@ If a resource is a nested stack, the nested stack's changeset will be printed as
 `LogicalId`s of the event's resource for nested stacks will be rendered as `NestedStack/NestedResource`)
 An icon showing what kind of change has been made (Add: `+`, Modify: `~`, Remove: `-`, Import: `↓`, Dynamic: `?`)
 A warning will be logged for resource changes that may result in a replacement.
+
+Use `--hide-tag <name>` (repeatable) to suppress changes to a tag by name — useful when a propagated stack tag such as `Version` would otherwise show as a change on every resource.
 
 ## Example
 
