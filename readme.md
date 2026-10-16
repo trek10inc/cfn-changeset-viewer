@@ -12,6 +12,7 @@ Options:
   --stack-name                 The name of the stack, only required if the change set ARN is not specified [string]
   --no-color                   Disable color output [boolean] [default: false]
   --show-unchanged-properties  Show unchanged properties in the diff [boolean]
+  --hide-stack-tags            Hide stack tag changes, optionally only for the given tag keys [array]
   --region                     The AWS region where the change-set is located [string]
   --help                       Show help [boolean]
 ```

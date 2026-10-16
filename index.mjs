@@ -68,6 +68,7 @@ const PolicyActionMap = {
  * @param {object} [options]
  * @param {boolean} [options.showUnchangedProperties]
  * @param {boolean} [options.showColor]
+ * @param {string[]} [options.hideStackTags] empty array hides all stack tags
  */
 function logChange(resourceChange, options = {}) {
   /** @type {*} */
@@ -90,7 +91,7 @@ function logChange(resourceChange, options = {}) {
   for (const detail of resourceChange.Details ?? []) {
     if (!detail.Target) continue;
     if (!detail.Target.Path) continue;
-    if (detail.Target.Attribute === "Tags" && detail.Target.Path?.startsWith("/Tags")) {
+    if (options.hideStackTags?.length !== 0 && detail.Target.Attribute === "Tags" && detail.Target.Path?.startsWith("/Tags")) {
       if (detail.Target.BeforeValue) {
         try {
           set(beforeStackTags, detail.Target.Path, JSON.parse(detail.Target.BeforeValue));
@@ -142,10 +143,22 @@ function logChange(resourceChange, options = {}) {
       ["Type", "DeletionPolicy", "UpdateReplacePolicy", "Properties", "StackTags"],
     );
   }
-  if (Object.keys(beforeStackTags).length > 0) {
+  const hiddenKeys = options.hideStackTags ?? [];
+  if (hiddenKeys.length > 0) {
+    const beforeTags = beforeStackTags.Tags ?? {};
+    const afterTags = afterStackTags.Tags ?? {};
+    for (const index of new Set([...Object.keys(beforeTags), ...Object.keys(afterTags)])) {
+      const key = afterTags[index]?.Key ?? beforeTags[index]?.Key;
+      if (hiddenKeys.includes(key)) {
+        delete beforeTags[index];
+        delete afterTags[index];
+      }
+    }
+  }
+  if (Object.keys(beforeStackTags.Tags ?? {}).length > 0) {
     before[resourceChange.LogicalResourceId ?? ""].StackTags = Object.values(beforeStackTags.Tags);
   }
-  if (Object.keys(afterStackTags).length > 0) {
+  if (Object.keys(afterStackTags.Tags ?? {}).length > 0) {
     after[resourceChange.LogicalResourceId ?? ""].StackTags = Object.values(afterStackTags.Tags);
   }
   const diffStrings = getObjectDiff(
@@ -218,6 +231,7 @@ async function getChangeSetChanges(cfn, changeSetId) {
  * @param {object} [options]
  * @param {boolean} [options.showUnchangedProperties]
  * @param {boolean} [options.showColor]
+ * @param {string[]} [options.hideStackTags] empty array hides all stack tags
  * @param {string} [path]
  */
 async function printChangeSet(cfn, changeSetId, options = undefined, path = "") {
@@ -285,6 +299,11 @@ export async function main() {
       description: "Show unchanged properties in the diff",
       type: "boolean",
     })
+    .option("hide-stack-tags", {
+      description: "Hide stack tag changes, optionally only for the given tag keys",
+      type: "string",
+      array: true,
+    })
     .option("region", {
       description: "The AWS region where the change-set is located",
       type: "string",
@@ -343,6 +362,7 @@ export async function main() {
       {
         showUnchangedProperties: args.showUnchangedProperties,
         showColor: args.showColor,
+        hideStackTags: args.hideStackTags,
       },
       "",
     );
